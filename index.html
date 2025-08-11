@@ -2,12 +2,89 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visualización de Reportes</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        #map { height: 350px; }
-        #photos { margin-top: 10px; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-image: url('https://images.pexels.com/photos/13822368/pexels-photo-13822368.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #f0f4f8;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            font-family: 'Georgia', serif;
+            font-size: 2.5em;
+            color: #007bff;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            animation: fadeInDown 1s ease-in-out;
+        }
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            gap: 20px;
+        }
+        #map {
+            height: 500px;
+            width: 70%;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 1s ease-in-out;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        #photos {
+            width: 30%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+            max-height: 500px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            animation: slideInRight 1s ease-in-out;
+        }
+        .photo-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #photos img {
+            width: 100px; /* Reduje el tamaño para incluir el botón */
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        #photos img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+        .delete-btn {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .delete-btn:hover {
+            background-color: #cc0000;
+        }
         .modal {
             display: none;
             position: fixed;
@@ -15,32 +92,84 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(190, 26, 26, 0.5);
+            background-color: rgba(0, 0, 0, 0.7);
             justify-content: center;
             align-items: center;
+            z-index: 1000;
+            animation: fadeInModal 0.5s ease-in-out;
         }
         .modal-content {
-            background-color: white;
+            background-color: #fff;
             padding: 20px;
-            border-radius: 5px;
+            border-radius: 15px;
             text-align: center;
+            max-width: 80%;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            position: relative;
+            animation: zoomIn 0.5s ease-in-out;
         }
         .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
+            color: #ff0000;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 30px;
             font-weight: bold;
             cursor: pointer;
+            transition: color 0.3s ease;
         }
         .close:hover {
-            color: black;
+            color: #cc0000;
+        }
+        #modalImage {
+            max-width: 100%;
+            border-radius: 10px;
+            border: 3px solid #007bff;
+        }
+        #modalId {
+            margin-top: 10px;
+            font-size: 1.2em;
+            color: #007bff;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeInModal {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes zoomIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            #map, #photos {
+                width: 100%;
+            }
+            #photos {
+                max-height: 300px;
+            }
         }
     </style>
 </head>
 <body>
     <h1>Reportes en Mapa</h1>
-    <div id="map"></div>
-    <div id="photos"></div>
+    <div class="container">
+        <div id="map"></div>
+        <div id="photos"></div>
+    </div>
 
     <div id="photoModal" class="modal">
         <div class="modal-content">
@@ -63,16 +192,23 @@
             photosDiv.innerHTML = '';
 
             reports.forEach(report => {
-                L.marker([report.latitude, report.longitude]).addTo(map)
-                    .bindPopup(`ID: ${report.id}<br>Fecha: ${report.timestamp}`)
-                    .on('click', () => showPhoto(report.photo_base64, report.id));
+                const marker = L.marker([report.latitude, report.longitude]).addTo(map);
+                marker.bindPopup(`ID: ${report.id}<br>Fecha: ${report.timestamp}`);
+                marker.on('click', () => showPhoto(report.photo_base64, report.id));
 
+                const photoItem = document.createElement('div');
+                photoItem.className = 'photo-item';
                 const img = document.createElement('img');
                 img.src = `data:image/jpeg;base64,${report.photo_base64}`;
                 img.alt = `Foto de reporte ${report.id}`;
-                img.style.width = '200px';
                 img.onclick = () => showPhoto(report.photo_base64, report.id);
-                photosDiv.appendChild(img);
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Eliminar';
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.onclick = () => deleteReport(report.id);
+                photoItem.appendChild(img);
+                photoItem.appendChild(deleteBtn);
+                photosDiv.appendChild(photoItem);
             });
         }
 
@@ -93,6 +229,19 @@
                     modal.style.display = 'none';
                 }
             };
+        }
+
+        async function deleteReport(reportId) {
+            if (confirm('¿Estás seguro de eliminar este reporte?')) {
+                const response = await fetch(`http://127.0.0.1:8000/reports/${reportId}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    loadReports(); // Recarga los reportes para actualizar la página
+                } else {
+                    alert('Error al eliminar el reporte');
+                }
+            }
         }
 
         loadReports();
