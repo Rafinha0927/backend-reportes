@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Visualización de Reportes</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #map { height: 350px; }
+        #photos { margin-top: 10px; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(190, 26, 26, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <h1>Reportes en Mapa</h1>
+    <div id="map"></div>
+    <div id="photos"></div>
+
+    <div id="photoModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <img id="modalImage" src="" alt="Foto del reporte">
+            <p id="modalId"></p>
+        </div>
+    </div>
+
+    <script>
+        const map = L.map('map').setView([10.9878, -74.7889], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        async function loadReports() {
+            const response = await fetch('http://127.0.0.1:8000/reports/');
+            const reports = await response.json();
+            const photosDiv = document.getElementById('photos');
+            photosDiv.innerHTML = '';
+
+            reports.forEach(report => {
+                L.marker([report.latitude, report.longitude]).addTo(map)
+                    .bindPopup(`ID: ${report.id}<br>Fecha: ${report.timestamp}`)
+                    .on('click', () => showPhoto(report.photo_base64, report.id));
+
+                const img = document.createElement('img');
+                img.src = `data:image/jpeg;base64,${report.photo_base64}`;
+                img.alt = `Foto de reporte ${report.id}`;
+                img.style.width = '200px';
+                img.onclick = () => showPhoto(report.photo_base64, report.id);
+                photosDiv.appendChild(img);
+            });
+        }
+
+        function showPhoto(base64, id) {
+            const modal = document.getElementById('photoModal');
+            const modalImage = document.getElementById('modalImage');
+            const modalId = document.getElementById('modalId');
+            modalImage.src = `data:image/jpeg;base64,${base64}`;
+            modalId.textContent = `Reporte ID: ${id}`;
+            modal.style.display = 'flex';
+
+            document.querySelector('.close').onclick = () => {
+                modal.style.display = 'none';
+            };
+
+            window.onclick = (event) => {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+
+        loadReports();
+    </script>
+</body>
+</html>
