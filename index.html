@@ -44,8 +44,11 @@
             animation: fadeIn 1s ease-in-out;
             background-color: rgba(255, 255, 255, 0.9);
         }
-        #photos {
+        #photos-container {
             width: 30%;
+            position: relative;
+        }
+        #photos {
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -57,6 +60,32 @@
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             animation: slideInRight 1s ease-in-out;
+        }
+        .loading-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            border-radius: 10px;
+            border: 2px dashed #007bff; /* Contorno de cargando */
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         .photo-item {
             display: flex;
@@ -168,7 +197,12 @@
     <h1>Reportes en Mapa</h1>
     <div class="container">
         <div id="map"></div>
-        <div id="photos"></div>
+        <div id="photos-container">
+            <div id="photos"></div>
+            <div class="loading-overlay" id="loading">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
     </div>
 
     <div id="photoModal" class="modal">
@@ -188,12 +222,16 @@
         let socket = new WebSocket("ws://186.98.29.101:5000/ws");
 
         socket.onmessage = function(event) {
-            const newReport = JSON.parse(event.data);
-            if (newReport.action === "delete") {
-                removeReport(newReport.id);
-            } else {
-                addReport(newReport);
-            }
+            const data = JSON.parse(event.data);
+            document.getElementById('loading').style.display = 'flex';  // Muestra el contorno de cargando
+            setTimeout(() => {  // Simula un breve retraso para mostrar el loading
+                if (data.action === "delete") {
+                    removeReport(data.id);
+                } else {
+                    addReport(data);
+                }
+                document.getElementById('loading').style.display = 'none';  // Oculta el loading
+            }, 500);  // 0.5 segundos para ver el efecto
         };
 
         socket.onclose = function() {
