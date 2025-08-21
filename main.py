@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, HTTPException, Body, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
@@ -6,6 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from pydantic import BaseModel
 from datetime import datetime
+import json
 
 # Configuración de la BD
 DATABASE_URL = "sqlite:///./reports.db"
@@ -42,11 +43,26 @@ app = FastAPI(
 # Configura CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permitir todos los orígenes (ajústalos en producción)
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_origin_regex=r".*"  # Para WebSockets
 )
+
+# Lista de clientes conectados por WebSocket
+connected_clients = []
+
+# WebSocket endpoint
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    connected_clients.append(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()  # Mantiene la conexión abierta
+    except WebSocketDisconnect:
+        connected_clients.remove(websocket)
 
 # Sirve index.html en la raíz
 @app.get("/", response_class=HTMLResponse)
@@ -67,6 +83,21 @@ def create_report(report: ReportCreate = Body(...)):
         db.add(db_report)
         db.commit()
         db.refresh(db_report)
+        
+        # Broadcast del nuevo reporte a todos los clientes WebSocket
+        new_report_json = json.dumps({
+            "id": db_report.id,
+            "latitude": db_report.latitude,
+            "longitude": db_report.longitude,
+            "timestamp": db_report.timestamp.isoformat(),
+            "photo_base64": db_report.photo_base64
+        })
+        for client in connected_clients[:]:  # Copia para evitar errores durante iteración
+            try:
+                client.send_text(new_report_json)
+            except:
+                connected_clients.remove(client)
+        
         return db_report
     finally:
         db.close()
@@ -100,6 +131,15 @@ def delete_report(report_id: int):
             raise HTTPException(status_code=404, detail="Reporte no encontrado")
         db.delete(report)
         db.commit()
+        
+        # Opcional: Broadcast de eliminación para actualizar clientes en tiempo real
+        delete_message = json.dumps({"action": "delete", "id": report_id})
+        for client in connected_clients[:]:
+            try:
+                client.send_text(delete_message)
+            except:
+                connected_clients.remove(client)
+        
         return {"message": "Reporte eliminado exitosamente"}
     finally:
         db.close()

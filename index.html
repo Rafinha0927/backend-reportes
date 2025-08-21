@@ -64,7 +64,7 @@
             gap: 10px;
         }
         #photos img {
-            width: 100px; /* Reduje el tamaño para incluir el botón */
+            width: 100px;
             border-radius: 8px;
             cursor: pointer;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -185,6 +185,24 @@
             attribution: '© OpenStreetMap'
         }).addTo(map);
 
+        let socket = new WebSocket("ws://186.98.29.101:5000/ws");
+
+        socket.onmessage = function(event) {
+            const newReport = JSON.parse(event.data);
+            if (newReport.action === "delete") {
+                removeReport(newReport.id);
+            } else {
+                addReport(newReport);
+            }
+        };
+
+        socket.onclose = function() {
+            console.log("WebSocket cerrado, reconectando...");
+            setTimeout(() => {
+                socket = new WebSocket("ws://186.98.29.101:5000/ws");
+            }, 1000);
+        };
+
         async function loadReports() {
             const response = await fetch('http://186.98.29.101:5000/reports/');
             const reports = await response.json();
@@ -192,24 +210,37 @@
             photosDiv.innerHTML = '';
 
             reports.forEach(report => {
-                const marker = L.marker([report.latitude, report.longitude]).addTo(map);
-                marker.bindPopup(`ID: ${report.id}<br>Fecha: ${report.timestamp}`);
-                marker.on('click', () => showPhoto(report.photo_base64, report.id));
-
-                const photoItem = document.createElement('div');
-                photoItem.className = 'photo-item';
-                const img = document.createElement('img');
-                img.src = `data:image/jpeg;base64,${report.photo_base64}`;
-                img.alt = `Foto de reporte ${report.id}`;
-                img.onclick = () => showPhoto(report.photo_base64, report.id);
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = 'Eliminar';
-                deleteBtn.className = 'delete-btn';
-                deleteBtn.onclick = () => deleteReport(report.id);
-                photoItem.appendChild(img);
-                photoItem.appendChild(deleteBtn);
-                photosDiv.appendChild(photoItem);
+                addReport(report);
             });
+        }
+
+        function addReport(report) {
+            const marker = L.marker([report.latitude, report.longitude]).addTo(map);
+            marker.bindPopup(`ID: ${report.id}<br>Fecha: ${report.timestamp}`);
+            marker.on('click', () => showPhoto(report.photo_base64, report.id));
+
+            const photoItem = document.createElement('div');
+            photoItem.className = 'photo-item';
+            photoItem.dataset.id = report.id;  // Para facilitar eliminación
+            const img = document.createElement('img');
+            img.src = `data:image/jpeg;base64,${report.photo_base64}`;
+            img.alt = `Foto de reporte ${report.id}`;
+            img.onclick = () => showPhoto(report.photo_base64, report.id);
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Eliminar';
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.onclick = () => deleteReport(report.id);
+            photoItem.appendChild(img);
+            photoItem.appendChild(deleteBtn);
+            document.getElementById('photos').appendChild(photoItem);
+        }
+
+        function removeReport(reportId) {
+            const photoItem = document.querySelector(`.photo-item[data-id="${reportId}"]`);
+            if (photoItem) {
+                photoItem.remove();
+            }
+            // También eliminar marcador si es necesario (requiere rastrear marcadores)
         }
 
         function showPhoto(base64, id) {
@@ -237,7 +268,7 @@
                     method: 'DELETE'
                 });
                 if (response.ok) {
-                    loadReports(); // Recarga los reportes para actualizar la página
+                    removeReport(reportId);  // Elimina localmente sin recargar
                 } else {
                     alert('Error al eliminar el reporte');
                 }
