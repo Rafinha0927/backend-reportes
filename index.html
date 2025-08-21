@@ -193,14 +193,14 @@
 
             reports.forEach(report => {
                 const marker = L.marker([report.latitude, report.longitude]).addTo(map);
-                marker.bindPopup(ID: ${report.id}<br>Fecha: ${report.timestamp});
+                marker.bindPopup(`ID: ${report.id}<br>Fecha: ${report.timestamp}`);
                 marker.on('click', () => showPhoto(report.photo_base64, report.id));
 
                 const photoItem = document.createElement('div');
                 photoItem.className = 'photo-item';
                 const img = document.createElement('img');
-                img.src = data:image/jpeg;base64,${report.photo_base64};
-                img.alt = Foto de reporte ${report.id};
+                img.src = `data:image/jpeg;base64,${report.photo_base64}`;
+                img.alt = `Foto de reporte ${report.id}`;
                 img.onclick = () => showPhoto(report.photo_base64, report.id);
                 const deleteBtn = document.createElement('button');
                 deleteBtn.textContent = 'Eliminar';
@@ -216,8 +216,8 @@
             const modal = document.getElementById('photoModal');
             const modalImage = document.getElementById('modalImage');
             const modalId = document.getElementById('modalId');
-            modalImage.src = data:image/jpeg;base64,${base64};
-            modalId.textContent = Reporte ID: ${id};
+            modalImage.src = `data:image/jpeg;base64,${base64}`;
+            modalId.textContent = `Reporte ID: ${id}`;
             modal.style.display = 'flex';
 
             document.querySelector('.close').onclick = () => {
@@ -233,7 +233,7 @@
 
         async function deleteReport(reportId) {
             if (confirm('¿Estás seguro de eliminar este reporte?')) {
-                const response = await fetch(http://186.98.29.101:5000/reports/${reportId}, {
+                const response = await fetch(`http://186.98.29.101:5000/reports/${reportId}`, {
                     method: 'DELETE'
                 });
                 if (response.ok) {
