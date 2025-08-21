@@ -6,9 +6,18 @@
     <title>Visualización de Reportes</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --accent-color-1: #28a745;
+            --accent-color-2: #dc3545;
+            --background-overlay: rgba(240, 244, 248, 0.9);
+        }
+
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Roboto', sans-serif;
             background-image: url('https://images.pexels.com/photos/13822368/pexels-photo-13822368.jpeg');
             background-size: cover;
             background-position: center;
@@ -20,47 +29,59 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-height: 100vh;
         }
+
         h1 {
-            font-family: 'Georgia', serif;
-            font-size: 2.5em;
-            color: #007bff;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            animation: fadeInDown 1s ease-in-out;
+            font-family: 'Cinzel', serif;
+            font-size: 3em;
+            color: var(--primary-color);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+            text-align: center;
+            animation: fadeInDown 1.2s ease-in-out;
         }
+
         .container {
             display: flex;
             width: 100%;
-            max-width: 1200px;
-            gap: 20px;
+            max-width: 1300px;
+            gap: 30px;
+            justify-content: center;
         }
+
         #map {
-            height: 500px;
+            height: 600px;
             width: 70%;
-            border: 2px solid #007bff;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            animation: fadeIn 1s ease-in-out;
-            background-color: rgba(255, 255, 255, 0.9);
+            border: 3px solid var(--primary-color);
+            border-radius: 15px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            animation: fadeIn 1.2s ease-in-out;
+            background-color: var(--background-overlay);
+            overflow: hidden;
         }
+
         #photos-container {
             width: 30%;
             position: relative;
+            min-width: 300px;
         }
+
         #photos {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 15px;
             overflow-y: auto;
-            max-height: 500px;
-            padding: 10px;
-            background-color: rgba(255, 255, 255, 0.9);
-            border: 2px solid #007bff;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            animation: slideInRight 1s ease-in-out;
+            max-height: 600px;
+            padding: 15px;
+            background-color: var(--background-overlay);
+            border: 3px solid var(--primary-color);
+            border-radius: 15px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            animation: slideInRight 1.2s ease-in-out;
         }
+
         .loading-overlay {
             display: none;
             position: absolute;
@@ -68,52 +89,85 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(255, 255, 255, 0.7);
+            background-color: rgba(255, 255, 255, 0.8);
             justify-content: center;
             align-items: center;
             z-index: 10;
-            border-radius: 10px;
-            border: 2px dashed #007bff; /* Contorno de cargando */
+            border-radius: 15px;
+            border: 3px dashed var(--primary-color);
         }
+
         .loading-spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #007bff;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             animation: spin 1s linear infinite;
         }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
         .photo-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-        }
-        #photos img {
-            width: 100px;
-            border-radius: 8px;
-            cursor: pointer;
+            gap: 15px;
+            padding: 10px;
+            border-radius: 10px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        #photos img:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+
+        .photo-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 123, 255, 0.3);
         }
+
+        .photo-item:nth-child(1) { background-color: #e6f3ff; animation: colorPulse 2s infinite; }
+        .photo-item:nth-child(2) { background-color: #ffe6e6; animation: colorPulse 2.2s infinite; }
+        .photo-item:nth-child(3) { background-color: #e6ffe6; animation: colorPulse 2.4s infinite; }
+        .photo-item:nth-child(4) { background-color: #fff3e6; animation: colorPulse 2.6s infinite; }
+        .photo-item:nth-child(5) { background-color: #f3e6ff; animation: colorPulse 2.8s infinite; }
+        .photo-item:nth-child(6) { background-color: #e6fff3; animation: colorPulse 3s infinite; }
+
+        @keyframes colorPulse {
+            0% { background-color: inherit; }
+            50% { background-color: rgba(255, 255, 255, 0.9); }
+            100% { background-color: inherit; }
+        }
+
+        #photos img {
+            width: 120px;
+            height: auto;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            object-fit: cover;
+        }
+
+        #photos img:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(0, 123, 255, 0.3);
+        }
+
         .delete-btn {
-            background-color: #ff4444;
+            background-color: var(--accent-color-2);
             color: white;
             border: none;
             border-radius: 5px;
-            padding: 5px 10px;
+            padding: 8px 12px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            font-weight: 500;
         }
+
         .delete-btn:hover {
-            background-color: #cc0000;
+            background-color: #b30000;
+            transform: scale(1.05);
         }
+
         .modal {
             display: none;
             position: fixed;
@@ -125,70 +179,100 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            animation: fadeInModal 0.5s ease-in-out;
+            animation: fadeInModal 0.6s ease-in-out;
         }
+
         .modal-content {
             background-color: #fff;
-            padding: 20px;
-            border-radius: 15px;
+            padding: 25px;
+            border-radius: 20px;
             text-align: center;
-            max-width: 80%;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            max-width: 90%;
+            max-height: 90vh;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
             position: relative;
-            animation: zoomIn 0.5s ease-in-out;
+            animation: zoomIn 0.6s ease-in-out;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
+
         .close {
-            color: #ff0000;
+            color: var(--accent-color-2);
             position: absolute;
-            top: 10px;
-            right: 20px;
-            font-size: 30px;
+            top: 15px;
+            right: 25px;
+            font-size: 35px;
             font-weight: bold;
             cursor: pointer;
-            transition: color 0.3s ease;
+            transition: color 0.3s ease, transform 0.3s ease;
         }
+
         .close:hover {
-            color: #cc0000;
+            color: #800000;
+            transform: scale(1.2);
         }
+
         #modalImage {
             max-width: 100%;
-            border-radius: 10px;
-            border: 3px solid #007bff;
+            max-height: 80vh;
+            width: auto;
+            height: auto;
+            border-radius: 15px;
+            border: 4px solid var(--primary-color);
+            object-fit: contain;
+            margin: 15px 0;
         }
+
         #modalId {
-            margin-top: 10px;
-            font-size: 1.2em;
-            color: #007bff;
+            margin-top: 15px;
+            font-size: 1.5em;
+            color: var(--primary-color);
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
+
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
+
         @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
+            from { opacity: 0; transform: translateY(-30px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
         @keyframes slideInRight {
             from { opacity: 0; transform: translateX(50px); }
             to { opacity: 1; transform: translateX(0); }
         }
+
         @keyframes fadeInModal {
             from { opacity: 0; }
             to { opacity: 1; }
         }
+
         @keyframes zoomIn {
-            from { transform: scale(0.8); opacity: 0; }
+            from { transform: scale(0.7); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
         }
+
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
+                gap: 20px;
             }
             #map, #photos {
                 width: 100%;
+                max-width: 100%;
             }
             #photos {
-                max-height: 300px;
+                max-height: 400px;
+            }
+            h1 {
+                font-size: 2.2em;
             }
         }
     </style>
@@ -220,18 +304,19 @@
         }).addTo(map);
 
         let socket = new WebSocket("ws://186.98.29.101:5000/ws");
+        const markers = new Map(); // Para rastrear marcadores y eliminarlos
 
         socket.onmessage = function(event) {
             const data = JSON.parse(event.data);
-            document.getElementById('loading').style.display = 'flex';  // Muestra el contorno de cargando
-            setTimeout(() => {  // Simula un breve retraso para mostrar el loading
+            document.getElementById('loading').style.display = 'flex';
+            setTimeout(() => {
                 if (data.action === "delete") {
                     removeReport(data.id);
                 } else {
                     addReport(data);
                 }
-                document.getElementById('loading').style.display = 'none';  // Oculta el loading
-            }, 500);  // 0.5 segundos para ver el efecto
+                document.getElementById('loading').style.display = 'none';
+            }, 500);
         };
 
         socket.onclose = function() {
@@ -256,10 +341,11 @@
             const marker = L.marker([report.latitude, report.longitude]).addTo(map);
             marker.bindPopup(`ID: ${report.id}<br>Fecha: ${report.timestamp}`);
             marker.on('click', () => showPhoto(report.photo_base64, report.id));
+            markers.set(report.id, marker); // Rastrear marcador por ID
 
             const photoItem = document.createElement('div');
             photoItem.className = 'photo-item';
-            photoItem.dataset.id = report.id;  // Para facilitar eliminación
+            photoItem.dataset.id = report.id;
             const img = document.createElement('img');
             img.src = `data:image/jpeg;base64,${report.photo_base64}`;
             img.alt = `Foto de reporte ${report.id}`;
@@ -275,10 +361,12 @@
 
         function removeReport(reportId) {
             const photoItem = document.querySelector(`.photo-item[data-id="${reportId}"]`);
-            if (photoItem) {
-                photoItem.remove();
+            if (photoItem) photoItem.remove();
+            const marker = markers.get(reportId);
+            if (marker) {
+                map.removeLayer(marker);
+                markers.delete(reportId);
             }
-            // También eliminar marcador si es necesario (requiere rastrear marcadores)
         }
 
         function showPhoto(base64, id) {
@@ -288,6 +376,25 @@
             modalImage.src = `data:image/jpeg;base64,${base64}`;
             modalId.textContent = `Reporte ID: ${id}`;
             modal.style.display = 'flex';
+
+            // Ajustar tamaño dinámicamente cuando la imagen carga
+            modalImage.onload = () => {
+                const maxWidth = window.innerWidth * 0.8;
+                const maxHeight = window.innerHeight * 0.7;
+                let width = modalImage.naturalWidth;
+                let height = modalImage.naturalHeight;
+
+                if (width > maxWidth) {
+                    height = (maxWidth / width) * height;
+                    width = maxWidth;
+                }
+                if (height > maxHeight) {
+                    width = (maxHeight / height) * width;
+                    height = maxHeight;
+                }
+                modalImage.style.width = `${width}px`;
+                modalImage.style.height = `${height}px`;
+            };
 
             document.querySelector('.close').onclick = () => {
                 modal.style.display = 'none';
@@ -306,7 +413,7 @@
                     method: 'DELETE'
                 });
                 if (response.ok) {
-                    removeReport(reportId);  // Elimina localmente sin recargar
+                    removeReport(reportId);
                 } else {
                     alert('Error al eliminar el reporte');
                 }
