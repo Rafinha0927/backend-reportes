@@ -143,4 +143,3 @@ def delete_report(report_id: int):
         return {"message": "Reporte eliminado exitosamente"}
     finally:
         db.close()
-        
