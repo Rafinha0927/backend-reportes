@@ -9,6 +9,7 @@ from datetime import datetime
 import json
 
 # Configuración de la BD
+# Para pruebas locales, se usa SQLite con ruta './reports.db'. Se puede cambiar a memoria (:memory:) para pruebas rápidas.
 DATABASE_URL = "sqlite:///./reports.db"
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -41,28 +42,29 @@ app = FastAPI(
 )
 
 # Configura CORS
+# En pruebas locales, allow_origins=["*"] permite acceso desde cualquier origen. Ajustar a dominios específicos en producción.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    allow_origin_regex=r".*"  # Para WebSockets
+    allow_origin_regex=r".*"  # Para WebSockets, permite conexiones dinámicas.
 )
 
 # Lista de clientes conectados por WebSocket
 connected_clients = []
 
-# WebSocket endpoint
+# WebSocket endpoint para manejar conexiones en tiempo real
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
+    await websocket.accept()  # Acepta la conexión WebSocket de forma asíncrona
     connected_clients.append(websocket)
     try:
         while True:
-            data = await websocket.receive_text()  # Mantiene la conexión abierta
+            await websocket.receive_text()  # Mantiene la conexión abierta recibiendo datos
     except WebSocketDisconnect:
-        connected_clients.remove(websocket)
+        connected_clients.remove(websocket)  # Elimina cliente desconectado
 
 # Sirve index.html en la raíz
 @app.get("/", response_class=HTMLResponse)
@@ -71,7 +73,7 @@ async def read_index():
         return HTMLResponse(content=file.read())
 
 @app.post("/reports/", response_model=ReportResponse)
-def create_report(report: ReportCreate = Body(...)):
+async def create_report(report: ReportCreate = Body(...)):
     db = SessionLocal()
     try:
         db_report = Report(
@@ -92,38 +94,17 @@ def create_report(report: ReportCreate = Body(...)):
             "timestamp": db_report.timestamp.isoformat(),
             "photo_base64": db_report.photo_base64
         })
-        for client in connected_clients[:]:  # Copia para evitar errores durante iteración
+        for client in connected_clients[:]:  # Usa copia para evitar modificaciones durante iteración
             try:
-                client.send_text(new_report_json)
+                await client.send_text(new_report_json)  # Envía mensaje asíncronamente
             except:
-                connected_clients.remove(client)
-        
+                connected_clients.remove(client)  # Elimina cliente si falla el envío
         return db_report
     finally:
         db.close()
 
-@app.get("/reports/", response_model=list[ReportResponse])
-def get_reports():
-    db = SessionLocal()
-    try:
-        reports = db.query(Report).all()
-        return reports
-    finally:
-        db.close()
-
-@app.get("/reports/{report_id}", response_model=ReportResponse)
-def get_report(report_id: int):
-    db = SessionLocal()
-    try:
-        report = db.query(Report).filter(Report.id == report_id).first()
-        if report is None:
-            raise HTTPException(status_code=404, detail="Reporte no encontrado")
-        return report
-    finally:
-        db.close()
-
 @app.delete("/reports/{report_id}")
-def delete_report(report_id: int):
+async def delete_report(report_id: int):
     db = SessionLocal()
     try:
         report = db.query(Report).filter(Report.id == report_id).first()
@@ -132,14 +113,13 @@ def delete_report(report_id: int):
         db.delete(report)
         db.commit()
         
-        # Opcional: Broadcast de eliminación para actualizar clientes en tiempo real
+        # Broadcast de eliminación para actualizar clientes en tiempo real
         delete_message = json.dumps({"action": "delete", "id": report_id})
         for client in connected_clients[:]:
             try:
-                client.send_text(delete_message)
+                await client.send_text(delete_message)  # Envía mensaje asíncronamente
             except:
-                connected_clients.remove(client)
-        
+                connected_clients.remove(client)  # Elimina cliente si falla
         return {"message": "Reporte eliminado exitosamente"}
     finally:
         db.close()
