@@ -8,6 +8,23 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
     <style>
+        @keyframes slideInReport {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+    transform: translateX(0);
+    opacity: 1;
+        }
+        }
+
+        .slide-in {
+        animation-name: slideInReport;
+        animation-duration: 0.8s;
+        animation-timing-function: ease-out;
+        animation-fill-mode: forwards;
+        }
         :root {
             --primary-color: #007bff;
             --secondary-color: #6c757d;
@@ -337,28 +354,37 @@
             });
         }
 
-        function addReport(report) {
-            const marker = L.marker([report.latitude, report.longitude]).addTo(map);
-            marker.bindPopup(`ID: ${report.id}<br>Fecha: ${report.timestamp}`);
-            marker.on('click', () => showPhoto(report.photo_base64, report.id));
-            markers.set(report.id, marker); // Rastrear marcador por ID
+        // Agrupa la lógica para agregar un reporte tanto en el mapa como en la lista de fotos
+function addReport(report) {
+    const marker = L.marker([report.latitude, report.longitude]).addTo(map);
+    marker.bindPopup(`ID: ${report.id}<br>Fecha: ${report.timestamp}`);
+    marker.on('click', () => showPhoto(report.photo_base64, report.id));
+    markers.set(report.id, marker); // Rastrear marcador por ID
 
-            const photoItem = document.createElement('div');
-            photoItem.className = 'photo-item';
-            photoItem.dataset.id = report.id;
-            const img = document.createElement('img');
-            img.src = `data:image/jpeg;base64,${report.photo_base64}`;
-            img.alt = `Foto de reporte ${report.id}`;
-            img.onclick = () => showPhoto(report.photo_base64, report.id);
-            const deleteBtn = document.createElement('button');
-            deleteBtn.textContent = 'Eliminar';
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.onclick = () => deleteReport(report.id);
-            photoItem.appendChild(img);
-            photoItem.appendChild(deleteBtn);
-            document.getElementById('photos').appendChild(photoItem);
-        }
+    const photoItem = document.createElement('div');
+    photoItem.className = 'photo-item slide-in';  // Añadido slide-in para animar al mostrar
+    photoItem.dataset.id = report.id;  // Para facilitar eliminación
+    const img = document.createElement('img');
+    img.src = `data:image/jpeg;base64,${report.photo_base64}`;
+    img.alt = `Foto de reporte ${report.id}`;
+    img.onclick = () => showPhoto(report.photo_base64, report.id);
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = 'Eliminar';
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.onclick = () => deleteReport(report.id);
+    photoItem.appendChild(img);
+    photoItem.appendChild(deleteBtn);
 
+    // Usar prepend para agregar al inicio
+    const photosContainer = document.getElementById('photos');
+    photosContainer.prepend(photoItem);
+
+    // Opcional: Quitar clase animación cuando termina para poder reaplicar si se añade nuevamente
+    photoItem.addEventListener('animationend', () => {
+        photoItem.classList.remove('slide-in');
+    });
+}
+        // Remueve reporte del mapa y lista de fotos
         function removeReport(reportId) {
             const photoItem = document.querySelector(`.photo-item[data-id="${reportId}"]`);
             if (photoItem) photoItem.remove();
