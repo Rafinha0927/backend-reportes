@@ -440,7 +440,7 @@
 
         async function deleteReport(reportId) {
             if (confirm('¿Estás seguro de eliminar este reporte?')) {
-                const response = await fetch(`http://191.110.32.119:5000/reports/$${reportId}`, {
+                const response = await fetch(`http://191.110.32.119:5000/reports/${reportId}`, {
                     method: 'DELETE'
                 });
                 if (response.ok) {
