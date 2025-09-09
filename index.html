@@ -340,12 +340,12 @@
         socket.onclose = function() {
             console.log("WebSocket cerrado, reconectando...");
             setTimeout(() => {
-                socket = new WebSocket("ws://localhost:5000/ws");
+                socket = new WebSocket("ws://18.233.249.90:5000/ws");
             }, 1000);
         };
 
         async function loadReports() {
-            const response = await fetch('http://localhost:5000/reports/');
+            const response = await fetch('http://18.233.249.90:5000/reports/');
             const reports = await response.json();
             const photosDiv = document.getElementById('photos');
             photosDiv.innerHTML = '';
@@ -440,7 +440,7 @@
 
         async function deleteReport(reportId) {
             if (confirm('¿Estás seguro de eliminar este reporte?')) {
-                const response = await fetch(`http://localhost:5000/reports/${reportId}`, {
+                const response = await fetch(`http://18.233.249.90:5000/reports/${reportId}`, {
                     method: 'DELETE'
                 });
                 if (response.ok) {
