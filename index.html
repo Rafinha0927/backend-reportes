@@ -345,15 +345,20 @@
         };
 
         async function loadReports() {
-            const response = await fetch('http://18.233.249.90:5000/reports/');
-            const reports = await response.json();
-            const photosDiv = document.getElementById('photos');
-            photosDiv.innerHTML = '';
-
-            reports.sort((a, b) => b.id - a.id);
-            reports.forEach(report => {
-                addReport(report, false);
-            });
+            try {
+                const response = await fetch('http://190.71.179.111:5000/reports/');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const reports = await response.json();
+                console.log('Reportes cargados:', reports);
+                if (Array.isArray(reports)) {
+                    reports.sort((a, b) => a.id - b.id); // Ordenar por ID
+                    reports.forEach(addReportToTable);
+                } else {
+                    console.error('Respuesta no es un array:', reports);
+                }
+            } catch (error) {
+                console.error('Error cargando reportes:', error);
+            }
         }
 
         function addReport(report, isRealTime = false) {
