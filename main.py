@@ -8,8 +8,8 @@ from pydantic import BaseModel
 from datetime import datetime
 import json
 
-# Configuración de la BD PostgreSQL local
-DATABASE_URL = "postgresql://postgres:Jd3201092@reports.c8f8a6g2c9he.us-east-1.rds.amazonaws.com:5432/reports"  # Ajusta la contraseña
+# Configuración de la BD PostgreSQL en RDS
+DATABASE_URL = "postgresql://postgres:Jd3201092@reports.c8f8a6g2c9he.us-east-1.rds.amazonaws.com:5432/reports"
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
@@ -74,8 +74,16 @@ async def read_index():
 async def create_report(report: ReportCreate = Body(...)):
     db = SessionLocal()
     try:
-        # Convierte la cadena timestamp a datetime
-        report_timestamp = datetime.fromisoformat(report.timestamp.replace('Z', '+00:00'))
+        # Depuración
+        print(f"Received timestamp: {report.timestamp}")
+        # Validar y convertir el timestamp
+        if not report.timestamp or not isinstance(report.timestamp, str):
+            raise HTTPException(status_code=400, detail="Timestamp inválido o ausente")
+        try:
+            report_timestamp = datetime.fromisoformat(report.timestamp.replace('Z', '+00:00'))
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=f"Formato de timestamp inválido: {e}")
+        
         db_report = Report(
             latitude=report.latitude,
             longitude=report.longitude,
@@ -97,12 +105,22 @@ async def create_report(report: ReportCreate = Body(...)):
             "timestamp": timestamp_str,
             "photo_base64": db_report.photo_base64
         })
+        print(f"Broadcasting: {new_report_json}")
         for client in connected_clients[:]:
             try:
                 await client.send_text(new_report_json)
-            except:
+                print(f"Mensaje enviado a cliente: {client.client}")
+            except Exception as e:
+                print(f"Error enviando a cliente: {e}")
                 connected_clients.remove(client)
-        return db_report
+        # Devuelve un diccionario con timestamp como cadena
+        return {
+            "id": db_report.id,
+            "latitude": db_report.latitude,
+            "longitude": db_report.longitude,
+            "timestamp": timestamp_str,
+            "photo_base64": db_report.photo_base64
+        }
     finally:
         db.close()
 
