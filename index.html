@@ -321,7 +321,7 @@
             attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        let socket = new WebSocket("ws://localhost:5000/ws");
+        let socket = new WebSocket("ws://18.233.249.90:5000/ws");
         const markers = new Map();
 
         socket.onmessage = function(event) {
