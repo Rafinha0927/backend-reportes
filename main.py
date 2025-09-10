@@ -7,6 +7,9 @@ from sqlalchemy.orm import sessionmaker
 from pydantic import BaseModel
 from datetime import datetime
 import json
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 # Configuración de la BD PostgreSQL en RDS
 DATABASE_URL = "postgresql://postgres:Jd3201092@reports.c8f8a6g2c9he.us-east-1.rds.amazonaws.com:5432/reports"
@@ -70,57 +73,24 @@ async def read_index():
     with open("index.html", "r", encoding="utf-8") as file:
         return HTMLResponse(content=file.read())
 
-@app.post("/reports/", response_model=ReportResponse)
-async def create_report(report: ReportCreate = Body(...)):
+@app.get("/reports/", response_model=List[ReportResponse])
+async def get_reports():
+    logging.debug("Fetching all reports")
     db = SessionLocal()
     try:
-        # Depuración
-        print(f"Received timestamp: {report.timestamp}")
-        # Validar y convertir el timestamp
-        if not report.timestamp or not isinstance(report.timestamp, str):
-            raise HTTPException(status_code=400, detail="Timestamp inválido o ausente")
-        try:
-            report_timestamp = datetime.fromisoformat(report.timestamp.replace('Z', '+00:00'))
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=f"Formato de timestamp inválido: {e}")
-        
-        db_report = Report(
-            latitude=report.latitude,
-            longitude=report.longitude,
-            timestamp=report_timestamp,
-            photo_base64=report.photo_base64
-        )
-        db.add(db_report)
-        db.commit()
-        db.refresh(db_report)
-        
-        # Convierte timestamp a cadena ISO explícitamente
-        timestamp_str = db_report.timestamp.isoformat() + 'Z' if isinstance(db_report.timestamp, datetime) else db_report.timestamp
-        
-        # Broadcast del nuevo reporte
-        new_report_json = json.dumps({
-            "id": db_report.id,
-            "latitude": db_report.latitude,
-            "longitude": db_report.longitude,
-            "timestamp": timestamp_str,
-            "photo_base64": db_report.photo_base64
-        })
-        print(f"Broadcasting: {new_report_json}")
-        for client in connected_clients[:]:
-            try:
-                await client.send_text(new_report_json)
-                print(f"Mensaje enviado a cliente: {client.client}")
-            except Exception as e:
-                print(f"Error enviando a cliente: {e}")
-                connected_clients.remove(client)
-        # Devuelve un diccionario con timestamp como cadena
-        return {
-            "id": db_report.id,
-            "latitude": db_report.latitude,
-            "longitude": db_report.longitude,
-            "timestamp": timestamp_str,
-            "photo_base64": db_report.photo_base64
-        }
+        reports = db.query(Report).all()
+        return [
+            {
+                "id": r.id,
+                "latitude": r.latitude,
+                "longitude": r.longitude,
+                "timestamp": r.timestamp.isoformat() + 'Z' if isinstance(r.timestamp, datetime) else r.timestamp,
+                "photo_base64": r.photo_base64
+            } for r in reports
+        ]
+    except Exception as e:
+        logging.error(f"Error fetching reports: {str(e)}")
+        raise HTTPException(status_code=500, detail="Database error")
     finally:
         db.close()
 
