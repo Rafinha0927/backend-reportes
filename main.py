@@ -62,6 +62,28 @@ connected_clients = []
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     connected_clients.append(websocket)
+    # Send initial reports
+    db = SessionLocal()
+    try:
+        reports = db.query(Report).all()
+        initial_data = json.dumps({
+            "action": "initial",
+            "reports": [
+                {
+                    "id": r.id,
+                    "latitude": r.latitude,
+                    "longitude": r.longitude,
+                    "timestamp": r.timestamp.isoformat() + 'Z',
+                    "photo_base64": r.photo_base64
+                } for r in reports
+            ]
+        })
+        await websocket.send_text(initial_data)
+        logging.debug(f"Sent initial reports: {initial_data}")
+    except Exception as e:
+        logging.error(f"Error sending initial reports: {e}")
+    finally:
+        db.close()
     try:
         while True:
             await websocket.receive_text()
