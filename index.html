@@ -316,112 +316,147 @@
     </div>
 
     <script>
-// Existing map initialization
-    let map = L.map('map').setView([37.7749, -122.4194], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-    }).addTo(map);
+        const map = L.map('map').setView([10.9878, -74.7889], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
 
-    // Store reports to avoid duplicates
-    let reports = new Map();
+        let socket = new WebSocket("ws://18.233.249.90:5000/ws");
+        const markers = new Map();
 
-    // Add report to table
-    function addReportToTable(report) {
-        if (!reports.has(report.id)) {
-            const table = document.getElementById('reports-table').getElementsByTagName('tbody')[0];
-            const row = table.insertRow();
-            row.setAttribute('data-id', report.id);
-            row.insertCell(0).textContent = report.id;
-            row.insertCell(1).textContent = report.latitude;
-            row.insertCell(2).textContent = report.longitude;
-            row.insertCell(3).textContent = report.timestamp;
-            const imgCell = row.insertCell(4);
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            document.getElementById('loading').style.display = 'flex';
+            setTimeout(() => {
+                if (data.action === "delete") {
+                    removeReport(data.id);
+                } else {
+                    addReport(data, true);
+                }
+                document.getElementById('loading').style.display = 'none';
+            }, 500);
+        };
+
+        socket.onclose = function() {
+            console.log("WebSocket cerrado, reconectando...");
+            setTimeout(() => {
+                socket = new WebSocket("ws://18.233.249.90:5000/ws");
+            }, 1000);
+        };
+
+        async function loadReports() {
+            try {
+                const response = await fetch('http://18.233.249.90:5000/reports/');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const reports = await response.json();
+                console.log('Reportes cargados:', reports);
+                if (Array.isArray(reports)) {
+                    reports.sort((a, b) => a.id - b.id); // Ordenar por ID
+                    reports.forEach(addReportToTable);
+                } else {
+                    console.error('Respuesta no es un array:', reports);
+                }
+            } catch (error) {
+                console.error('Error cargando reportes:', error);
+            }
+        }
+
+        function addReport(report, isRealTime = false) {
+            const marker = L.marker([report.latitude, report.longitude]).addTo(map);
+            marker.bindPopup(`ID: ${report.id}<br>Fecha: ${report.timestamp}`);
+            marker.on('click', () => showPhoto(report.photo_base64, report.id));
+            markers.set(report.id, marker);
+
+            const photoItem = document.createElement('div');
+            photoItem.className = 'photo-item';
+            if (isRealTime) {
+                setTimeout(() => {
+                    photoItem.classList.add('elegant-in');
+                }, 50);
+            }
+            photoItem.dataset.id = report.id;
             const img = document.createElement('img');
-            img.src = `data:image/png;base64,${report.photo_base64}`;
-            img.width = 100;
-            img.style.cursor = 'pointer';
-            img.onclick = function() {
-                document.getElementById('modalImage').src = img.src;
-                document.getElementById('imageModal').style.display = 'block';
+            img.src = `data:image/jpeg;base64,${report.photo_base64}`;
+            img.alt = `Foto de reporte ${report.id}`;
+            img.onclick = () => showPhoto(report.photo_base64, report.id);
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Eliminar';
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.onclick = () => deleteReport(report.id);
+            photoItem.appendChild(img);
+            photoItem.appendChild(deleteBtn);
+
+            const photosContainer = document.getElementById('photos');
+            photosContainer.prepend(photoItem);
+
+            if (isRealTime) {
+                photoItem.addEventListener('animationend', () => {
+                    photoItem.classList.remove('elegant-in');
+                }, { once: true });
+            }
+        }
+
+        function removeReport(reportId) {
+            const photoItem = document.querySelector(`.photo-item[data-id="${reportId}"]`);
+            if (photoItem) photoItem.remove();
+            const marker = markers.get(reportId);
+            if (marker) {
+                map.removeLayer(marker);
+                markers.delete(reportId);
+            }
+        }
+
+        function showPhoto(base64, id) {
+            const modal = document.getElementById('photoModal');
+            const modalImage = document.getElementById('modalImage');
+            const modalId = document.getElementById('modalId');
+            modalImage.src = `data:image/jpeg;base64,${base64}`;
+            modalId.textContent = `Reporte ID: ${id}`;
+            modal.style.display = 'flex';
+
+            modalImage.onload = () => {
+                const maxWidth = window.innerWidth * 0.8;
+                const maxHeight = window.innerHeight * 0.7;
+                let width = modalImage.naturalWidth;
+                let height = modalImage.naturalHeight;
+
+                if (width > maxWidth) {
+                    height = (maxWidth / width) * height;
+                    width = maxWidth;
+                }
+                if (height > maxHeight) {
+                    width = (maxHeight / height) * width;
+                    height = maxHeight;
+                }
+                modalImage.style.width = `${width}px`;
+                modalImage.style.height = `${height}px`;
             };
-            imgCell.appendChild(img);
-            // Add delete button
-            const deleteCell = row.insertCell(5);
-            const deleteButton = document.createElement('button');
-            deleteButton.textContent = 'Delete';
-            deleteButton.onclick = function() {
-                deleteReport(report.id);
+
+            document.querySelector('.close').onclick = () => {
+                modal.style.display = 'none';
             };
-            deleteCell.appendChild(deleteButton);
-            reports.set(report.id, { row: row, marker: null });
 
-            // Add marker to map
-            const marker = L.marker([report.latitude, report.longitude]).addTo(map)
-                .bindPopup(`ID: ${report.id}<br>Time: ${report.timestamp}<br><img src="data:image/png;base64,${report.photo_base64}" width="100">`);
-            reports.get(report.id).marker = marker;
+            window.onclick = (event) => {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            };
         }
-    }
 
-    // Delete report
-    async function deleteReport(reportId) {
-        try {
-            const response = await fetch(`http://18.233.249.90:5000/reports/${reportId}`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+        async function deleteReport(reportId) {
+            if (confirm('¿Estás seguro de eliminar este reporte?')) {
+                const response = await fetch(`http://18.233.249.90:5000/reports/${reportId}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    removeReport(reportId);
+                } else {
+                    alert('Error al eliminar el reporte');
+                }
             }
-            console.log(`Deleted report ID: ${reportId}`);
-        } catch (error) {
-            console.error('Error deleting report:', error);
         }
-    }
 
-    // Fetch reports on load
-    async function loadReports() {
-        try {
-            const response = await fetch('http://18.233.249.90:5000/reports/', {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const reportsData = await response.json();
-            console.log('Loaded reports:', reportsData);
-            reportsData.forEach(addReportToTable);
-        } catch (error) {
-            console.error('Error cargando reportes:', error);
-        }
-    }
-
-    // WebSocket for real-time updates
-    const ws = new WebSocket('ws://18.233.249.90:5000/ws');
-    ws.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-        console.log('WebSocket message:', data);
-        if (data.action === 'initial') {
-            data.reports.forEach(addReportToTable);
-        } else if (data.action === 'delete') {
-            if (reports.has(data.id)) {
-                const { row, marker } = reports.get(data.id);
-                row.remove();
-                if (marker) map.removeLayer(marker);
-                reports.delete(data.id);
-            }
-        } else {
-            addReportToTable(data);
-        }
-    };
-
-    // Existing modal close functionality
-    document.querySelector('.close').onclick = function() {
-        document.getElementById('imageModal').style.display = 'none';
-    };
-
-    // Load reports on page load
-    window.addEventListener('load', loadReports);
+        loadReports();
     </script>
 </body>
 </html>
