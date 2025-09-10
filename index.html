@@ -346,7 +346,7 @@
 
         async function loadReports() {
             try {
-                const response = await fetch('http://190.71.179.111:5000/reports/');
+                const response = await fetch('http://18.233.249.90:5000/reports/');
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const reports = await response.json();
                 console.log('Reportes cargados:', reports);

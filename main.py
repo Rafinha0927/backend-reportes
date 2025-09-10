@@ -9,7 +9,15 @@ from datetime import datetime
 import json
 
 # Configuración de la BD PostgreSQL en RDS
-DATABASE_URL = "postgresql://postgres:Jd3201092@reports.c8f8a6g2c9he.us-east-1.rds.amazonaws.com:5432/reports"
+DB_HOST = "reports.c8f8a6g2c9he.us-east-1.rds.amazonaws.com"  # Endpoint de RDS
+DB_PORT = 5432  # Puerto por defecto de PostgreSQL
+DB_NAME = "reports"  # Nombre de la base de datos
+DB_USER = "postgres"  # Nombre de usuario master
+DB_PASSWORD = "Jd3201092"  # Contraseña master
+DATABASE_URL = "postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+
+
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
