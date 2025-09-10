@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from datetime import datetime
 import json
 import logging
+from typing import List
 
 logging.basicConfig(level=logging.DEBUG)
 
