@@ -42,8 +42,12 @@ class ReportCreate(BaseModel):
         except ValueError:
             raise ValueError('El timestamp debe estar en formato ISO 8601 (ej. "2025-09-10T22:05:00-05:00")')
 
-class ReportResponse(ReportCreate):
+class ReportResponse(BaseModel):
     id: int
+    latitude: float
+    longitude: float
+    timestamp: str  # Aseguramos que sea una cadena en la respuesta
+    photo_base64: str
 
 # Crea la app FastAPI
 app = FastAPI(
@@ -93,7 +97,7 @@ async def get_reports():
                 "id": r.id,
                 "latitude": r.latitude,
                 "longitude": r.longitude,
-                "timestamp": r.timestamp.isoformat(),
+                "timestamp": r.timestamp.isoformat(),  # Serializamos explícitamente
                 "photo_base64": r.photo_base64
             } for r in reports
         ]
@@ -119,21 +123,24 @@ async def create_report(report: ReportCreate = Body(...)):
         db.commit()
         db.refresh(db_report)
         
-        # Broadcast del nuevo reporte a todos los clientes WebSocket
-        new_report_json = json.dumps({
+        # Preparar respuesta con timestamp como cadena
+        response_data = {
             "id": db_report.id,
             "latitude": db_report.latitude,
             "longitude": db_report.longitude,
-            "timestamp": db_report.timestamp.isoformat(),
+            "timestamp": db_report.timestamp.isoformat(),  # Serializamos explícitamente
             "photo_base64": db_report.photo_base64
-        })
+        }
+        
+        # Broadcast del nuevo reporte a todos los clientes WebSocket
+        new_report_json = json.dumps(response_data)
         for client in connected_clients[:]:
             try:
                 await client.send_text(new_report_json)
             except:
                 connected_clients.remove(client)
         
-        return db_report
+        return response_data  # Devolvemos el diccionario serializado
     finally:
         db.close()
 
