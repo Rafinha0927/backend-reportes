@@ -6,85 +6,182 @@
     <title>Visualización de Reportes</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Inter:wght@700&display=swap" rel="stylesheet"> <!-- Tipografías modernas -->
     <style>
+        @keyframes elegantFadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        .elegant-in {
+            animation-name: elegantFadeIn;
+            animation-duration: 0.6s; /* Duración corta para un efecto profesional */
+            animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); /* Easing suave */
+            animation-fill-mode: forwards;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #4A90E2, #50E3C2); /* Azul a verde neón */
+            --secondary-gradient: linear-gradient(135deg, #6B48FF, #FF6B6B); /* Púrpura a rojo suave */
+            --background-dark: #1A1A2E; /* Fondo oscuro moderno */
+            --text-light: #F0F2F5; /* Texto claro */
+            --accent-shadow: rgba(74, 144, 226, 0.3); /* Sombra sutil */
+        }
+
         body {
-            font-family: 'Arial', sans-serif;
-            background-image: url('https://images.pexels.com/photos/13822368/pexels-photo-13822368.jpeg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-color: #f0f4f8;
-            color: #333;
+            font-family: 'Poppins', sans-serif;
+            background: var(--background-dark);
+            color: var(--text-light);
             margin: 0;
             padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
+
         h1 {
-            font-family: 'Georgia', serif;
+            font-family: 'Inter', sans-serif;
             font-size: 2.5em;
-            color: #007bff;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            animation: fadeInDown 1s ease-in-out;
+            color: #FFFFFF;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            letter-spacing: 1px;
+            text-align: center;
+            animation: fadeInDown 1s ease-out;
         }
+
         .container {
             display: flex;
             width: 100%;
-            max-width: 1200px;
-            gap: 20px;
+            max-width: 1400px;
+            gap: 40px;
+            justify-content: center;
+            align-items: flex-start;
         }
+
         #map {
-            height: 500px;
-            width: 70%;
-            border: 2px solid #007bff;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            animation: fadeIn 1s ease-in-out;
-            background-color: rgba(255, 255, 255, 0.9);
+            height: 650px;
+            width: 68%;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.9), rgba(0, 0, 0, 0.7));
+            overflow: hidden;
+            animation: fadeIn 1.2s ease-out;
         }
-        #photos {
+
+        #photos-container {
             width: 30%;
+            position: relative;
+            min-width: 300px;
+        }
+
+        #photos {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 20px;
             overflow-y: auto;
-            max-height: 500px;
-            padding: 10px;
-            background-color: rgba(255, 255, 255, 0.9);
-            border: 2px solid #007bff;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            animation: slideInRight 1s ease-in-out;
+            max-height: 650px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.95), rgba(74, 144, 226, 0.1));
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            box-shadow: 0 8px 16px var(--accent-shadow);
+            animation: slideInRight 1.2s ease-out;
         }
+
+        .loading-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(26, 26, 46, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            border-radius: 15px;
+            border: 2px dashed rgba(74, 144, 226, 0.5);
+        }
+
+        .loading-spinner {
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-top: 5px solid #4A90E2;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .photo-item {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-left: 4px solid transparent;
         }
+
+        .photo-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(74, 144, 226, 0.2);
+            border-left: 4px solid #50E3C2;
+        }
+
         #photos img {
-            width: 100px;
+            width: 120px;
+            height: auto;
             border-radius: 8px;
             cursor: pointer;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.1);
         }
+
         #photos img:hover {
             transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+            box-shadow: 0 6px 12px rgba(80, 227, 194, 0.3);
         }
+
         .delete-btn {
-            background-color: #ff4444;
-            color: white;
+            background: var(--secondary-gradient);
+            color: #FFFFFF;
             border: none;
             border-radius: 5px;
-            padding: 5px 10px;
+            padding: 8px 15px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: transform 0.3s ease, background 0.3s ease;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
         }
+
         .delete-btn:hover {
-            background-color: #cc0000;
+            background: linear-gradient(135deg, #FF6B6B, #6B48FF);
+            transform: scale(1.05);
         }
+
         .modal {
             display: none;
             position: fixed;
@@ -92,62 +189,122 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            animation: fadeInModal 0.5s ease-in-out;
+            backdrop-filter: blur(5px);
+            animation: fadeInModal 0.5s ease-out;
         }
+
         .modal-content {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 15px;
+            background: linear-gradient(135deg, #2A2A3E, #3A3A5E);
+            padding: 30px;
+            border-radius: 20px;
             text-align: center;
-            max-width: 80%;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            max-width: 90%;
+            max-height: 90vh;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
             position: relative;
-            animation: zoomIn 0.5s ease-in-out;
+            animation: zoomIn 0.5s ease-out;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
+
         .close {
-            color: #ff0000;
+            color: #FF6B6B;
             position: absolute;
-            top: 10px;
-            right: 20px;
-            font-size: 30px;
+            top: 15px;
+            right: 25px;
+            font-size: 35px;
             font-weight: bold;
             cursor: pointer;
-            transition: color 0.3s ease;
+            transition: color 0.3s ease, transform 0.3s ease;
         }
+
         .close:hover {
-            color: #cc0000;
+            color: #FFFFFF;
+            transform: scale(1.2);
         }
+
         #modalImage {
             max-width: 100%;
+            max-height: 80vh;
+            width: auto;
+            height: auto;
             border-radius: 10px;
-            border: 3px solid #007bff;
+            border: 3px solid rgba(80, 227, 194, 0.5);
+            object-fit: contain;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
+
         #modalId {
-            margin-top: 10px;
-            font-size: 1.2em;
-            color: #007bff;
+            margin-top: 15px;
+            font-size: 1.6em;
+            color: #50E3C2;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideInRight { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes fadeInModal {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
         @media (max-width: 768px) {
-            .container { flex-direction: column; }
-            #map, #photos { width: 100%; }
-            #photos { max-height: 300px; }
+            .container {
+                flex-direction: column;
+                gap: 25px;
+            }
+            #map, #photos {
+                width: 100%;
+                max-width: 100%;
+            }
+            #photos {
+                max-height: 450px;
+            }
+            h1 {
+                font-size: 2em;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Reportes en Mapa</h1>
+    <h1>Reports Visualization
+    </h1>
     <div class="container">
         <div id="map"></div>
-        <div id="photos"></div>
+        <div id="photos-container">
+            <div id="photos"></div>
+            <div class="loading-overlay" id="loading">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
     </div>
 
     <div id="photoModal" class="modal">
@@ -164,43 +321,60 @@
             attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        let markers = new Map();
+        let socket = new WebSocket("ws://18.233.249.90:5000/ws");
+        const markers = new Map();
 
-        // Conexión WebSocket
-        let socket = new WebSocket("ws://localhost:8000/ws");
         socket.onmessage = function(event) {
             const data = JSON.parse(event.data);
-            if (data.action === "delete") {
-                removeReport(data.id);
-            } else {
-                addReport(data, true);
-            }
+            document.getElementById('loading').style.display = 'flex';
+            setTimeout(() => {
+                if (data.action === "delete") {
+                    removeReport(data.id);
+                } else {
+                    addReport(data, true);
+                }
+                document.getElementById('loading').style.display = 'none';
+            }, 500);
         };
 
         socket.onclose = function() {
             console.log("WebSocket cerrado, reconectando...");
             setTimeout(() => {
-                socket = new WebSocket("ws://localhost:8000/ws");
+                socket = new WebSocket("ws://18.233.249.90:5000/ws");
             }, 1000);
         };
 
         async function loadReports() {
-            const response = await fetch('http://localhost:8000/reports/');
-            const reports = await response.json();
-            const photosDiv = document.getElementById('photos');
-            photosDiv.innerHTML = '';
-
-            reports.forEach(report => addReport(report, false));
+            try {
+                const response = await fetch('http://18.233.249.90:5000/reports/');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const reports = await response.json();
+                console.log('Reportes cargados:', reports);
+                if (Array.isArray(reports)) {
+                    reports.sort((a, b) => a.id - b.id); // Ordenar por ID
+                    reports.forEach(addReportToTable);
+                } else {
+                    console.error('Respuesta no es un array:', reports);
+                }
+            } catch (error) {
+                console.error('Error cargando reportes:', error);
+            }
         }
 
         function addReport(report, isRealTime = false) {
             const marker = L.marker([report.latitude, report.longitude]).addTo(map);
-            marker.bindPopup(`ID: ${report.id}<br>Fecha: ${new Date(report.timestamp).toLocaleString()}`);
+            marker.bindPopup(`ID: ${report.id}<br>Fecha: ${report.timestamp}`);
             marker.on('click', () => showPhoto(report.photo_base64, report.id));
             markers.set(report.id, marker);
 
             const photoItem = document.createElement('div');
             photoItem.className = 'photo-item';
+            if (isRealTime) {
+                setTimeout(() => {
+                    photoItem.classList.add('elegant-in');
+                }, 50);
+            }
+            photoItem.dataset.id = report.id;
             const img = document.createElement('img');
             img.src = `data:image/jpeg;base64,${report.photo_base64}`;
             img.alt = `Foto de reporte ${report.id}`;
@@ -211,12 +385,19 @@
             deleteBtn.onclick = () => deleteReport(report.id);
             photoItem.appendChild(img);
             photoItem.appendChild(deleteBtn);
-            const photosDiv = document.getElementById('photos');
-            photosDiv.appendChild(photoItem);
+
+            const photosContainer = document.getElementById('photos');
+            photosContainer.prepend(photoItem);
+
+            if (isRealTime) {
+                photoItem.addEventListener('animationend', () => {
+                    photoItem.classList.remove('elegant-in');
+                }, { once: true });
+            }
         }
 
         function removeReport(reportId) {
-            const photoItem = document.querySelector(`.photo-item img[alt="Foto de reporte ${reportId}"]`).parentElement;
+            const photoItem = document.querySelector(`.photo-item[data-id="${reportId}"]`);
             if (photoItem) photoItem.remove();
             const marker = markers.get(reportId);
             if (marker) {
@@ -233,6 +414,24 @@
             modalId.textContent = `Reporte ID: ${id}`;
             modal.style.display = 'flex';
 
+            modalImage.onload = () => {
+                const maxWidth = window.innerWidth * 0.8;
+                const maxHeight = window.innerHeight * 0.7;
+                let width = modalImage.naturalWidth;
+                let height = modalImage.naturalHeight;
+
+                if (width > maxWidth) {
+                    height = (maxWidth / width) * height;
+                    width = maxWidth;
+                }
+                if (height > maxHeight) {
+                    width = (maxHeight / height) * width;
+                    height = maxHeight;
+                }
+                modalImage.style.width = `${width}px`;
+                modalImage.style.height = `${height}px`;
+            };
+
             document.querySelector('.close').onclick = () => {
                 modal.style.display = 'none';
             };
@@ -246,16 +445,17 @@
 
         async function deleteReport(reportId) {
             if (confirm('¿Estás seguro de eliminar este reporte?')) {
-                const response = await fetch(`http://localhost:8000/reports/${reportId}`, {
+                const response = await fetch(`http://18.233.249.90:5000/reports/${reportId}`, {
                     method: 'DELETE'
                 });
-                if (!response.ok) {
+                if (response.ok) {
+                    removeReport(reportId);
+                } else {
                     alert('Error al eliminar el reporte');
                 }
             }
         }
 
-        // Cargar reportes al iniciar
         loadReports();
     </script>
 </body>
