@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from datetime import datetime
 import json
 import logging
@@ -33,6 +33,14 @@ class ReportCreate(BaseModel):
     longitude: float
     timestamp: str  # Recibe como cadena ISO
     photo_base64: str
+
+    @validator('timestamp')
+    def validate_timestamp(cls, v):
+        try:
+            datetime.fromisoformat(v.replace('Z', '+00:00'))
+            return v
+        except ValueError:
+            raise ValueError('El timestamp debe estar en formato ISO 8601 (ej. "2025-09-10T22:05:00-05:00")')
 
 class ReportResponse(ReportCreate):
     id: int
@@ -85,7 +93,7 @@ async def get_reports():
                 "id": r.id,
                 "latitude": r.latitude,
                 "longitude": r.longitude,
-                "timestamp": r.timestamp.isoformat() + 'Z' if isinstance(r.timestamp, datetime) else r.timestamp,
+                "timestamp": r.timestamp.isoformat(),
                 "photo_base64": r.photo_base64
             } for r in reports
         ]
@@ -100,10 +108,11 @@ async def create_report(report: ReportCreate = Body(...)):
     db = SessionLocal()
     try:
         # Convertir timestamp de str a datetime
+        timestamp = datetime.fromisoformat(report.timestamp.replace('Z', '+00:00'))
         db_report = Report(
             latitude=report.latitude,
             longitude=report.longitude,
-            timestamp=datetime.fromisoformat(report.timestamp.replace('Z', '+00:00')),
+            timestamp=timestamp,
             photo_base64=report.photo_base64
         )
         db.add(db_report)

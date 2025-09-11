@@ -6,32 +6,26 @@
     <title>Visualización de Reportes</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Inter:wght@700&display=swap" rel="stylesheet"> <!-- Tipografías modernas -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Inter:wght@700&display=swap" rel="stylesheet">
     <style>
         @keyframes elegantFadeIn {
-            from {
-                opacity: 0;
-                transform: translateX(20px) scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0) scale(1);
-            }
+            from { opacity: 0; transform: translateX(20px) scale(0.9); }
+            to { opacity: 1; transform: translateX(0) scale(1); }
         }
 
         .elegant-in {
             animation-name: elegantFadeIn;
-            animation-duration: 0.6s; /* Duración corta para un efecto profesional */
-            animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); /* Easing suave */
+            animation-duration: 0.6s;
+            animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
             animation-fill-mode: forwards;
         }
 
         :root {
-            --primary-gradient: linear-gradient(135deg, #4A90E2, #50E3C2); /* Azul a verde neón */
-            --secondary-gradient: linear-gradient(135deg, #6B48FF, #FF6B6B); /* Púrpura a rojo suave */
-            --background-dark: #1A1A2E; /* Fondo oscuro moderno */
-            --text-light: #F0F2F5; /* Texto claro */
-            --accent-shadow: rgba(74, 144, 226, 0.3); /* Sombra sutil */
+            --primary-gradient: linear-gradient(135deg, #4A90E2, #50E3C2);
+            --secondary-gradient: linear-gradient(135deg, #6B48FF, #FF6B6B);
+            --background-dark: #1A1A2E;
+            --text-light: #F0F2F5;
+            --accent-shadow: rgba(74, 144, 226, 0.3);
         }
 
         body {
@@ -251,52 +245,22 @@
             letter-spacing: 1px;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes slideInRight {
-            from { opacity: 0; transform: translateX(30px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        @keyframes fadeInModal {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes zoomIn {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-                gap: 25px;
-            }
-            #map, #photos {
-                width: 100%;
-                max-width: 100%;
-            }
-            #photos {
-                max-height: 450px;
-            }
-            h1 {
-                font-size: 2em;
-            }
+            .container { flex-direction: column; gap: 25px; }
+            #map, #photos { width: 100%; max-width: 100%; }
+            #photos { max-height: 450px; }
+            h1 { font-size: 2em; }
         }
     </style>
 </head>
 <body>
-    <h1>Reports Visualization
-    </h1>
+    <h1>Reports Visualization</h1>
     <div class="container">
         <div id="map"></div>
         <div id="photos-container">
@@ -321,7 +285,7 @@
             attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        let socket = new WebSocket("ws://18.233.249.90:5000/ws");
+        let socket = new WebSocket("ws://localhost:8000/ws");
         const markers = new Map();
 
         socket.onmessage = function(event) {
@@ -340,19 +304,19 @@
         socket.onclose = function() {
             console.log("WebSocket cerrado, reconectando...");
             setTimeout(() => {
-                socket = new WebSocket("ws://18.233.249.90:5000/ws");
+                socket = new WebSocket("ws://localhost:8000/ws");
             }, 1000);
         };
 
         async function loadReports() {
             try {
-                const response = await fetch('http://18.233.249.90:5000/reports/');
+                const response = await fetch('http://localhost:8000/reports/');
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const reports = await response.json();
                 console.log('Reportes cargados:', reports);
                 if (Array.isArray(reports)) {
                     reports.sort((a, b) => a.id - b.id); // Ordenar por ID
-                    reports.forEach(addReportToTable);
+                    reports.forEach(report => addReport(report, false));
                 } else {
                     console.error('Respuesta no es un array:', reports);
                 }
@@ -363,7 +327,7 @@
 
         function addReport(report, isRealTime = false) {
             const marker = L.marker([report.latitude, report.longitude]).addTo(map);
-            marker.bindPopup(`ID: ${report.id}<br>Fecha: ${report.timestamp}`);
+            marker.bindPopup(`ID: ${report.id}<br>Fecha: ${new Date(report.timestamp).toLocaleString()}`);
             marker.on('click', () => showPhoto(report.photo_base64, report.id));
             markers.set(report.id, marker);
 
@@ -445,12 +409,10 @@
 
         async function deleteReport(reportId) {
             if (confirm('¿Estás seguro de eliminar este reporte?')) {
-                const response = await fetch(`http://18.233.249.90:5000/reports/${reportId}`, {
+                const response = await fetch(`http://localhost:8000/reports/${reportId}`, {
                     method: 'DELETE'
                 });
-                if (response.ok) {
-                    removeReport(reportId);
-                } else {
+                if (!response.ok) {
                     alert('Error al eliminar el reporte');
                 }
             }
