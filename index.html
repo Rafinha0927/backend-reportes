@@ -9,8 +9,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Inter:wght@700&display=swap" rel="stylesheet">
     <style>
         @keyframes elegantFadeIn {
-            from { opacity: 0; transform: translateX(20px) scale(0.9); }
-            to { opacity: 1; transform: translateX(0) scale(1); }
+            from {
+                opacity: 0;
+                transform: translateX(20px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
         }
 
         .elegant-in {
@@ -285,7 +291,7 @@
             attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        let socket = new WebSocket("ws://localhost:8000/ws");
+        let socket = new WebSocket("ws://18.233.249.90:5000/ws");
         const markers = new Map();
 
         socket.onmessage = function(event) {
@@ -304,18 +310,22 @@
         socket.onclose = function() {
             console.log("WebSocket cerrado, reconectando...");
             setTimeout(() => {
-                socket = new WebSocket("ws://localhost:8000/ws");
+                socket = new WebSocket("ws://18.233.249.90:5000/ws");
             }, 1000);
+        };
+
+        socket.onerror = function(error) {
+            console.error("Error en WebSocket:", error);
         };
 
         async function loadReports() {
             try {
-                const response = await fetch('http://localhost:8000/reports/');
+                const response = await fetch('http://18.233.249.90:5000/reports/');
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const reports = await response.json();
                 console.log('Reportes cargados:', reports);
                 if (Array.isArray(reports)) {
-                    reports.sort((a, b) => a.id - b.id); // Ordenar por ID
+                    reports.sort((a, b) => b.id - a.id); // Ordenar por ID descendente
                     reports.forEach(report => addReport(report, false));
                 } else {
                     console.error('Respuesta no es un array:', reports);
@@ -409,7 +419,7 @@
 
         async function deleteReport(reportId) {
             if (confirm('¿Estás seguro de eliminar este reporte?')) {
-                const response = await fetch(`http://localhost:8000/reports/${reportId}`, {
+                const response = await fetch(`http://18.233.249.90:5000/reports/${reportId}`, {
                     method: 'DELETE'
                 });
                 if (!response.ok) {
@@ -418,6 +428,7 @@
             }
         }
 
+        // Cargar reportes al iniciar
         loadReports();
     </script>
 </body>
