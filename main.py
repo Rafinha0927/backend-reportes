@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from datetime import datetime
 import json
 import logging
@@ -34,6 +34,14 @@ class ReportCreate(BaseModel):
     timestamp: str  # Recibe como cadena ISO
     photo_base64: str
 
+    @validator('timestamp')
+    def validate_timestamp(cls, v):
+        try:
+            datetime.fromisoformat(v.replace('Z', '+00:00'))
+            return v
+        except ValueError:
+            raise ValueError('El timestamp debe estar en formato ISO 8601 (ej. "2025-09-10T22:05:00-05:00")')
+
 class ReportResponse(BaseModel):
     id: int
     latitude: float
@@ -58,19 +66,36 @@ app.add_middleware(
     allow_origin_regex=r".*"  # Para WebSockets
 )
 
-# Lista de clientes conectados por WebSocket
+# Lista de clientes conectados por WebSocket y contador de usuarios
 connected_clients = []
+connected_users = 0
 
 # WebSocket endpoint
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     connected_clients.append(websocket)
+    global connected_users
+    connected_users += 1
+    await broadcast({"type": "user_count", "count": connected_users})
+
     try:
         while True:
-            await websocket.receive_text()
+            data = await websocket.receive_text()
+            if data == "ping":
+                await websocket.send_text("pong")
     except WebSocketDisconnect:
         connected_clients.remove(websocket)
+        connected_users -= 1
+        await broadcast({"type": "user_count", "count": connected_users})
+
+async def broadcast(message: dict):
+    message_json = json.dumps(message)
+    for client in connected_clients[:]:
+        try:
+            await client.send_text(message_json)
+        except:
+            connected_clients.remove(client)
 
 # Sirve index.html
 @app.get("/", response_class=HTMLResponse)
@@ -84,13 +109,12 @@ async def get_reports():
     db = SessionLocal()
     try:
         reports = db.query(Report).all()
-        # Serializar timestamp explícitamente para cumplir con ReportResponse
         return [
             {
                 "id": r.id,
                 "latitude": r.latitude,
                 "longitude": r.longitude,
-                "timestamp": r.timestamp.isoformat(),  # Convierte datetime a str ISO
+                "timestamp": r.timestamp.isoformat(),
                 "photo_base64": r.photo_base64
             } for r in reports
         ]
@@ -104,7 +128,6 @@ async def get_reports():
 async def create_report(report: ReportCreate = Body(...)):
     db = SessionLocal()
     try:
-        # Convertir timestamp de str a datetime
         timestamp = datetime.fromisoformat(report.timestamp.replace('Z', '+00:00'))
         db_report = Report(
             latitude=report.latitude,
@@ -115,25 +138,23 @@ async def create_report(report: ReportCreate = Body(...)):
         db.add(db_report)
         db.commit()
         db.refresh(db_report)
-        
-        # Preparar respuesta con timestamp serializado
+
         response_data = {
             "id": db_report.id,
             "latitude": db_report.latitude,
             "longitude": db_report.longitude,
-            "timestamp": db_report.timestamp.isoformat(),  # Serializa a str ISO
+            "timestamp": db_report.timestamp.isoformat(),
             "photo_base64": db_report.photo_base64
         }
-        
-        # Broadcast del nuevo reporte a todos los clientes WebSocket
-        new_report_json = json.dumps(response_data)
-        for client in connected_clients[:]:
-            try:
-                await client.send_text(new_report_json)
-            except:
-                connected_clients.remove(client)
-        
-        return response_data  # Devolver diccionario serializado para validación
+
+        # Broadcast del nuevo reporte
+        new_report = {
+            "type": "new_report",
+            "data": response_data
+        }
+        await broadcast(new_report)
+
+        return response_data
     finally:
         db.close()
 
@@ -146,14 +167,14 @@ async def delete_report(report_id: int):
             raise HTTPException(status_code=404, detail="Reporte no encontrado")
         db.delete(report)
         db.commit()
-        
+
         # Broadcast de eliminación
-        delete_message = json.dumps({"action": "delete", "id": report_id})
-        for client in connected_clients[:]:
-            try:
-                await client.send_text(delete_message)
-            except:
-                connected_clients.remove(client)
+        delete_message = {"type": "delete_report", "data": {"id": report_id}}
+        await broadcast(delete_message)
         return {"message": "Reporte eliminado exitosamente"}
     finally:
         db.close()
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
