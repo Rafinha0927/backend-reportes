@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 from datetime import datetime
 import json
 import logging
@@ -34,19 +34,11 @@ class ReportCreate(BaseModel):
     timestamp: str  # Recibe como cadena ISO
     photo_base64: str
 
-    @validator('timestamp')
-    def validate_timestamp(cls, v):
-        try:
-            datetime.fromisoformat(v.replace('Z', '+00:00'))
-            return v
-        except ValueError:
-            raise ValueError('El timestamp debe estar en formato ISO 8601 (ej. "2025-09-10T22:05:00-05:00")')
-
 class ReportResponse(BaseModel):
     id: int
     latitude: float
     longitude: float
-    timestamp: str  # Aseguramos que sea una cadena en la respuesta
+    timestamp: str  # Explícitamente str para validación
     photo_base64: str
 
 # Crea la app FastAPI
@@ -92,12 +84,13 @@ async def get_reports():
     db = SessionLocal()
     try:
         reports = db.query(Report).all()
+        # Serializar timestamp explícitamente para cumplir con ReportResponse
         return [
             {
                 "id": r.id,
                 "latitude": r.latitude,
                 "longitude": r.longitude,
-                "timestamp": r.timestamp.isoformat(),  # Serializamos explícitamente
+                "timestamp": r.timestamp.isoformat(),  # Convierte datetime a str ISO
                 "photo_base64": r.photo_base64
             } for r in reports
         ]
@@ -123,12 +116,12 @@ async def create_report(report: ReportCreate = Body(...)):
         db.commit()
         db.refresh(db_report)
         
-        # Preparar respuesta con timestamp como cadena
+        # Preparar respuesta con timestamp serializado
         response_data = {
             "id": db_report.id,
             "latitude": db_report.latitude,
             "longitude": db_report.longitude,
-            "timestamp": db_report.timestamp.isoformat(),  # Serializamos explícitamente
+            "timestamp": db_report.timestamp.isoformat(),  # Serializa a str ISO
             "photo_base64": db_report.photo_base64
         }
         
@@ -140,7 +133,7 @@ async def create_report(report: ReportCreate = Body(...)):
             except:
                 connected_clients.remove(client)
         
-        return response_data  # Devolvemos el diccionario serializado
+        return response_data  # Devolver diccionario serializado para validación
     finally:
         db.close()
 
