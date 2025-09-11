@@ -95,6 +95,39 @@ async def get_reports():
     finally:
         db.close()
 
+@app.post("/reports/", response_model=ReportResponse)
+async def create_report(report: ReportCreate = Body(...)):
+    db = SessionLocal()
+    try:
+        # Convertir timestamp de str a datetime
+        db_report = Report(
+            latitude=report.latitude,
+            longitude=report.longitude,
+            timestamp=datetime.fromisoformat(report.timestamp.replace('Z', '+00:00')),
+            photo_base64=report.photo_base64
+        )
+        db.add(db_report)
+        db.commit()
+        db.refresh(db_report)
+        
+        # Broadcast del nuevo reporte a todos los clientes WebSocket
+        new_report_json = json.dumps({
+            "id": db_report.id,
+            "latitude": db_report.latitude,
+            "longitude": db_report.longitude,
+            "timestamp": db_report.timestamp.isoformat(),
+            "photo_base64": db_report.photo_base64
+        })
+        for client in connected_clients[:]:
+            try:
+                await client.send_text(new_report_json)
+            except:
+                connected_clients.remove(client)
+        
+        return db_report
+    finally:
+        db.close()
+
 @app.delete("/reports/{report_id}")
 async def delete_report(report_id: int):
     db = SessionLocal()
