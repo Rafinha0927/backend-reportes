@@ -405,6 +405,12 @@
     </style>
 </head>
 <body>
+    <script>
+        // Verificar sesión al cargar
+        if (!document.cookie.includes('session_token')) {
+            window.location.href = '/';
+        }
+    </script>
     <div class="container">
         <!-- Encabezado -->
         <div class="header">
@@ -453,7 +459,7 @@
                 </div>
                 <div class="metric-value" id="responseTime">2.5s</div>
                 <div class="metric-label">Tiempo de Respuesta</div>
-                <div class="metric-change text-red-500">-3%</div>
+                <div class="metric-change" style="color: #ef4444;">-3%</div>
             </div>
         </div>
 
@@ -508,7 +514,7 @@
         });
 
         // WebSocket
-        let socket = new WebSocket("ws://18.233.249.90:5000/ws");
+        let socket = new WebSocket("ws://18.233.249.90:8000/ws");
         const markers = new Map();
         let reportCount = 0;
 
@@ -534,7 +540,9 @@
         // Cargar reportes iniciales
         async function loadReports() {
             try {
-                const response = await fetch('http://18.233.249.90:5000/reports/');
+                const response = await fetch('http://18.233.249.90:8000/reports/', {
+                    headers: { 'Authorization': `Bearer ${document.cookie.split('session_token=')[1].split(';')[0]}` }
+                });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const reports = await response.json();
                 reports.forEach(report => addReport(report, false));
@@ -622,7 +630,11 @@
 
         async function deleteReport(reportId) {
             if (confirm('¿Estás seguro de eliminar este reporte?')) {
-                const response = await fetch(`http://18.233.249.90:5000/reports/${reportId}`, { method: 'DELETE' });
+                const token = document.cookie.split('session_token=')[1].split(';')[0];
+                const response = await fetch(`http://18.233.249.90:8000/reports/${reportId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 if (!response.ok) alert('Error al eliminar el reporte');
             }
         }
