@@ -95,7 +95,7 @@ app = FastAPI(
 # Configurar CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Ajusta esto en producción a dominios específicos
+    allow_origins=["http://18.233.249.90:5000"],  # Especifica el origen exacto
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -124,23 +124,28 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
         raise HTTPException(status_code=401, detail="Credenciales inválidas")
     access_token = create_access_token(data={"sub": user.username})
     response = JSONResponse(content={"access_token": access_token, "token_type": "bearer"})
-    response.set_cookie(key="session_token", value=access_token, httponly=True, max_age=3600, path="/")
+    response.set_cookie(key="session_token", value=access_token, httponly=True, max_age=3600, path="/", samesite="Lax")
     return response
 
 @app.get("/", response_class=HTMLResponse)
 async def read_index(request: Request):
+    logging.debug(f"Verificando token en /: {request.cookies.get('session_token')}")
     token = request.cookies.get("session_token")
     if not token:
+        logging.debug("No se encontró token, redirigiendo a /login")
         return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
     try:
         get_current_user(token, SessionLocal())
+        logging.debug("Token válido, sirviendo index.html")
         with open("index.html", "r", encoding="utf-8") as file:
             return HTMLResponse(content=file.read())
-    except HTTPException:
+    except HTTPException as e:
+        logging.debug(f"Token inválido: {str(e.detail)}, redirigiendo a /login")
         return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
 
 @app.get("/login", response_class=HTMLResponse)
 async def read_login():
+    logging.debug("Sirviendo login.html")
     with open("login.html", "r", encoding="utf-8") as file:
         return HTMLResponse(content=file.read())
 
