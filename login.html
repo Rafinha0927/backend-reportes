@@ -135,7 +135,7 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
-            const response = await fetch('http://18.233.249.90:8000/token', {
+            const response = await fetch('http://18.233.249.90:5000/token', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({ username, password }).toString()
