@@ -157,7 +157,7 @@
             const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
 
-            const response = await fetch('http://18.233.249.90:8000/register/', {
+            const response = await fetch('http://18.233.249.90:5000/register/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, email, password })
