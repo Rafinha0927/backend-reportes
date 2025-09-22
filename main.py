@@ -20,16 +20,13 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Definición de la tabla de usuarios
+# Definición de la tabla de usuarios (solo definición, no creación)
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
-
-# Crear las tablas en la base de datos si no existen
-Base.metadata.create_all(bind=engine)
 
 # Dependencia para obtener la sesión de la base de datos
 def get_db():
@@ -129,7 +126,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
 
 @app.get("/", response_class=HTMLResponse)
 async def read_index(request: Request):
-    logging.debug(f"Verificando token en /: {request.cookies.get('session_token')}")
+    logging.debug(f"Verificando token en /: Cookie encontrada - {request.cookies.get('session_token')}")
     token = request.cookies.get("session_token")
     if not token:
         logging.debug("No se encontró token, redirigiendo a /login")
