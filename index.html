@@ -515,7 +515,7 @@
 
         // WebSocket
         const token = document.cookie.split('session_token=')[1]?.split(';')[0];
-        let socket = new WebSocket(`ws://18.233.249.90:8000/ws?token=${token}`);
+        let socket = new WebSocket(`ws://18.233.249.90:5000/ws?token=${token}`);
         const markers = new Map();
         let reportCount = 0;
 
@@ -541,7 +541,7 @@
         // Cargar reportes iniciales
         async function loadReports() {
             try {
-                const response = await fetch('http://18.233.249.90:8000/reports/', {
+                const response = await fetch('http://18.233.249.90:5000/reports/', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -631,7 +631,7 @@
 
         async function deleteReport(reportId) {
             if (confirm('¿Estás seguro de eliminar este reporte?')) {
-                const response = await fetch(`http://18.233.249.90:8000/reports/${reportId}`, {
+                const response = await fetch(`http://18.233.249.90:5000/reports/${reportId}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
