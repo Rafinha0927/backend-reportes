@@ -1,6 +1,6 @@
-from fastapi import FastAPI, HTTPException, Depends, Request, Response
+from fastapi import FastAPI, HTTPException, Depends, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
@@ -51,17 +51,9 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
 
-    @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(description="Datos para registrar un nuevo usuario")
-
 class UserLogin(BaseModel):
     username: str
     password: str
-
-    @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(description="Datos para iniciar sesión")
 
 # Funciones de autenticación
 def verify_password(plain_password, hashed_password):
@@ -103,7 +95,7 @@ app = FastAPI(
 # Configurar CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Ajusta esto en producción a dominios específicos
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -132,22 +124,25 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
         raise HTTPException(status_code=401, detail="Credenciales inválidas")
     access_token = create_access_token(data={"sub": user.username})
     response = JSONResponse(content={"access_token": access_token, "token_type": "bearer"})
-    response.set_cookie(key="session_token", value=access_token, httponly=True, max_age=3600)
+    response.set_cookie(key="session_token", value=access_token, httponly=True, max_age=3600, path="/")
     return response
 
 @app.get("/", response_class=HTMLResponse)
 async def read_index(request: Request):
     token = request.cookies.get("session_token")
     if not token:
-        with open("login.html", "r", encoding="utf-8") as file:
-            return HTMLResponse(content=file.read())
+        return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
     try:
         get_current_user(token, SessionLocal())
         with open("index.html", "r", encoding="utf-8") as file:
             return HTMLResponse(content=file.read())
     except HTTPException:
-        with open("login.html", "r", encoding="utf-8") as file:
-            return HTMLResponse(content=file.read())
+        return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+
+@app.get("/login", response_class=HTMLResponse)
+async def read_login():
+    with open("login.html", "r", encoding="utf-8") as file:
+        return HTMLResponse(content=file.read())
 
 if __name__ == "__main__":
     import uvicorn
