@@ -6,7 +6,7 @@
     <title>Reports Center - Sistema de Monitoreo</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -16,350 +16,75 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #1a1a2e;
+            background: #0f172a;
             color: #e0e0e0;
             min-height: 100vh;
             overflow-x: hidden;
         }
 
+        /* Background gradients */
+        .bg-gradients {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+        }
+
+        .bg-gradient-1 {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        }
+
+        .bg-gradient-2 {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at top right, rgba(30, 58, 138, 0.2) 0%, transparent 50%, rgba(147, 51, 234, 0.2) 100%);
+        }
+
         .container {
+            position: relative;
+            z-index: 1;
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
 
-        /* Encabezado */
+        /* Header mejorado */
         .header {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .header-left h1 {
-            font-size: 2.5em;
-            font-weight: 700;
-            background: linear-gradient(135deg, #4A90E2, #50E3C2);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 5px;
-        }
-
-        .header-left p {
-            color: #a0a0a0;
-            font-size: 1.1em;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .live-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(74, 222, 128, 0.2);
-            padding: 10px 15px;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+            backdrop-filter: blur(20px);
+            padding: 30px;
             border-radius: 20px;
-            color: #4ade80;
-            font-weight: 600;
-        }
-
-        .live-dot {
-            width: 8px;
-            height: 8px;
-            background: #4ade80;
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-        }
-
-        .user-count {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 5px 12px;
-            border-radius: 12px;
-            font-weight: 500;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        /* Tarjetas de métricas */
-        .metrics {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .metric-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-        }
-
-        .metric-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .metric-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .metric-icon {
-            width: 24px;
-            height: 24px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .metric-value {
-            font-size: 2em;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 5px;
-        }
-
-        .metric-label {
-            color: #a0a0a0;
-            font-size: 0.9em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .metric-change {
-            color: #4ade80;
-            font-size: 0.8em;
-            font-weight: 600;
-        }
-
-        /* Contenedor principal */
-        .main-container {
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 30px;
-        }
-
-        /* Mapa */
-        .map-container {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 15px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-            height: 600px;
-        }
-
-        #map {
-            height: 100%;
-            border-radius: 10px;
-        }
-
-        .leaflet-popup-content-wrapper {
-            background: #2a2a3e;
-            color: #e0e0e0;
-            border-radius: 8px;
-        }
-
-        /* Panel de reportes */
-        .reports-panel {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .panel-title {
-            font-size: 1.3em;
-            font-weight: 600;
-            color: #fff;
-        }
-
-        .reports-count {
-            background: rgba(74, 222, 128, 0.2);
-            color: #4ade80;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.9em;
-            font-weight: 500;
-        }
-
-        .report-list {
-            max-height: 450px;
-            overflow-y: auto;
-        }
-
-        .report-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            transition: transform 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .report-item:hover {
-            transform: translateY(-3px);
-        }
-
-        .report-image {
-            width: 80px;
-            height: 80px;
-            border-radius: 8px;
-            object-fit: cover;
-            cursor: pointer;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .report-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .report-id {
-            font-size: 0.9em;
-            font-weight: 600;
-            color: #fff;
-            margin-bottom: 5px;
-        }
-
-        .report-date {
-            font-size: 0.8em;
-            color: #a0a0a0;
-            margin-bottom: 8px;
-        }
-
-        .report-status {
-            background: rgba(74, 222, 128, 0.3);
-            color: #4ade80;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-size: 0.75em;
-            font-weight: 500;
-            display: inline-block;
-        }
-
-        .delete-btn {
-            background: rgba(239, 68, 68, 0.2);
-            color: #ef4444;
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            border-radius: 8px;
-            padding: 6px 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.85em;
-            font-weight: 500;
-        }
-
-        .delete-btn:hover {
-            background: rgba(239, 68, 68, 0.4);
-            color: #fff;
-            transform: scale(1.05);
-        }
-
-        /* Notificaciones emergentes */
-        .notifications {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .notification {
-            background: rgba(34, 197, 94, 0.9);
-            border-radius: 10px;
-            padding: 12px 15px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-            color: #fff;
-            animation: fadeInOut 4s ease-out forwards;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            max-width: 300px;
-        }
-
-        @keyframes fadeInOut {
-            0% { opacity: 0; transform: translateX(100%); }
-            10% { opacity: 1; transform: translateX(0); }
-            90% { opacity: 1; transform: translateX(0); }
-            100% { opacity: 0; transform: translateX(100%); }
-        }
-
-        .notification-title {
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-
-        .notification-message {
-            font-size: 0.9em;
-        }
-
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            animation: fadeInModal 0.3s ease-out;
-        }
-
-        .modal-content {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-            border-radius: 15px;
             text-align: center;
             max-width: 90%;
             max-height: 90vh;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
             animation: zoomIn 0.3s ease-out;
             overflow: auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        }
+
+        @keyframes fadeInModal {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         .close {
-            color: #ef4444;
+            color: rgba(255, 255, 255, 0.6);
             position: absolute;
-            top: 10px;
+            top: 15px;
             right: 20px;
             font-size: 30px;
             font-weight: bold;
@@ -368,62 +93,148 @@
         }
 
         .close:hover {
-            color: #fff;
+            color: #f87171;
         }
 
         #modalImage {
             max-width: 100%;
-            max-height: 80vh;
+            max-height: 70vh;
             width: auto;
             height: auto;
-            border-radius: 10px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
             object-fit: contain;
-            margin: 15px 0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
         #modalId {
-            margin-top: 10px;
-            font-size: 1.5em;
-            color: #fff;
+            margin-top: 15px;
+            font-size: 1.2em;
+            color: rgba(255, 255, 255, 0.9);
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
-        @keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        /* Empty state */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+        }
 
+        .empty-icon {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .empty-subtitle {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-            .main-container { grid-template-columns: 1fr; }
-            .map-container, .reports-panel { width: 100%; }
-            .metrics { grid-template-columns: 1fr; }
-            .header { flex-direction: column; gap: 15px; text-align: center; }
-            .header-right { justify-content: center; }
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .map-container,
+            .reports-panel {
+                width: 100%;
+            }
+            
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .header-right {
+                flex-direction: column;
+                width: 100%;
+                gap: 10px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Background gradients -->
+    <div class="bg-gradients">
+        <div class="bg-gradient-1"></div>
+        <div class="bg-gradient-2"></div>
+    </div>
+
+    <!-- Loading overlay (se muestra mientras carga) -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+    </div>
+
     <div class="container">
-        <!-- Encabezado -->
+        <!-- Encabezado mejorado con info de usuario -->
         <div class="header">
             <div class="header-left">
                 <h1>Reports Center</h1>
                 <p>Sistema de Monitoreo en Tiempo Real</p>
             </div>
             <div class="header-right">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-name" id="userName">Usuario</div>
+                </div>
                 <div class="live-indicator">
                     <span class="live-dot"></span>
                     <span class="live-text">EN VIVO</span>
                 </div>
-                <div class="user-count" id="userCount">0</div>
+                <div class="user-count" id="userCount">0 usuarios</div>
+                <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
             </div>
         </div>
 
-        <!-- Tarjetas de métricas -->
+        <!-- Tarjetas de métricas mejoradas -->
         <div class="metrics">
-            <div class="metric-card">
+            <div class="metric-card" style="--accent-color: #10b981;">
                 <div class="metric-header">
                     <div class="metric-icon">👥</div>
                 </div>
@@ -431,7 +242,7 @@
                 <div class="metric-label">Usuarios Conectados</div>
                 <div class="metric-change">+12%</div>
             </div>
-            <div class="metric-card">
+            <div class="metric-card" style="--accent-color: #3b82f6;">
                 <div class="metric-header">
                     <div class="metric-icon">📊</div>
                 </div>
@@ -439,7 +250,7 @@
                 <div class="metric-label">Reportes Totales</div>
                 <div class="metric-change">+5%</div>
             </div>
-            <div class="metric-card">
+            <div class="metric-card" style="--accent-color: #f97316;">
                 <div class="metric-header">
                     <div class="metric-icon">⚠️</div>
                 </div>
@@ -447,13 +258,13 @@
                 <div class="metric-label">Reportes Activos</div>
                 <div class="metric-change">+8%</div>
             </div>
-            <div class="metric-card">
+            <div class="metric-card" style="--accent-color: #8b5cf6;">
                 <div class="metric-header">
                     <div class="metric-icon">⏱️</div>
                 </div>
                 <div class="metric-value" id="responseTime">2.5s</div>
                 <div class="metric-label">Tiempo de Respuesta</div>
-                <div class="metric-change text-red-500">-3%</div>
+                <div class="metric-change negative">-3%</div>
             </div>
         </div>
 
@@ -464,18 +275,29 @@
                 <div id="map"></div>
             </div>
 
-            <!-- Panel de reportes recientes -->
+            <!-- Panel de reportes -->
             <div class="reports-panel">
                 <div class="panel-header">
                     <div class="panel-title">Reportes Recientes</div>
                     <div class="reports-count" id="totalReportsCount">0</div>
                 </div>
-                <div class="report-list" id="reportList"></div>
+                <div class="report-list" id="reportList">
+                    <!-- Empty state -->
+                    <div class="empty-state" id="emptyState">
+                        <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                        </svg>
+                        <div class="empty-title">No hay reportes disponibles</div>
+                        <div class="empty-subtitle">Los reportes aparecerán aquí</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Notificaciones emergentes -->
+    <!-- Notificaciones -->
     <div class="notifications" id="notifications"></div>
 
     <!-- Modal -->
@@ -488,164 +310,329 @@
     </div>
 
     <script>
-        // Inicializar mapa centrado en Barranquilla
-        const map = L.map('map').setView([10.9639, -74.7964], 12); // Coordenadas de Barranquilla
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
+        // Configuración y variables globales
+        const API_BASE = window.location.origin;
+        const SERVER_IP = '18.233.249.90:5000'; // Tu IP actual para WebSocket
+        
+        let map;
+        let socket;
+        let markers = new Map();
+        let reportCount = 0;
+        let authToken = null;
+        let currentUser = null;
 
-        // Agregar pines azules (ejemplo con coordenadas aleatorias cerca de Barranquilla)
-        const barranquillaCoords = [
-            [10.9639, -74.7964],
-            [10.9750, -74.8100],
-            [10.9500, -74.7800],
-            [10.9850, -74.7900]
-        ];
-        barranquillaCoords.forEach(coord => {
-            L.marker(coord, { icon: L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png', iconSize: [25, 41], iconAnchor: [12, 41] }) })
-                .addTo(map)
-                .bindPopup(`Ubicación en Barranquilla`);
+        // Verificar autenticación al cargar
+        window.addEventListener('DOMContentLoaded', async () => {
+            authToken = localStorage.getItem('access_token');
+            
+            if (!authToken) {
+                // No hay token, redirigir al login
+                window.location.href = '/login';
+                return;
+            }
+            
+            // Verificar que el token sea válido
+            try {
+                const response = await fetch(`${API_BASE}/users/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    // Token inválido
+                    localStorage.clear();
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                currentUser = await response.json();
+                updateUserInfo(currentUser);
+                
+                // Inicializar la aplicación
+                initializeApp();
+            } catch (error) {
+                console.error('Error verificando autenticación:', error);
+                localStorage.clear();
+                window.location.href = '/login';
+            }
         });
 
-        // WebSocket
-        let socket = new WebSocket("ws://18.233.249.90:5000/ws");
-        const markers = new Map();
-        let reportCount = 0;
+        function updateUserInfo(user) {
+            const userAvatar = document.getElementById('userAvatar');
+            const userName = document.getElementById('userName');
+            
+            if (user) {
+                userAvatar.textContent = user.username.charAt(0).toUpperCase();
+                userName.textContent = user.username;
+            }
+        }
 
-        socket.onopen = () => console.log("Conexión WebSocket establecida");
-        socket.onclose = () => console.log("WebSocket cerrado, reconectando...");
-        socket.onerror = (error) => console.error("Error en WebSocket:", error);
+        function initializeApp() {
+            // Inicializar mapa
+            initializeMap();
+            
+            // Conectar WebSocket
+            connectWebSocket();
+            
+            // Cargar reportes iniciales
+            loadReports();
+            
+            // Cargar estadísticas
+            loadStats();
+            
+            // Actualizar estadísticas cada 30 segundos
+            setInterval(loadStats, 30000);
+        }
 
-        socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
+        function initializeMap() {
+            // Inicializar mapa centrado en Barranquilla
+            map = L.map('map').setView([10.9639, -74.7964], 12);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+        }
+
+        function connectWebSocket() {
+            const wsUrl = `ws://${SERVER_IP}/ws`;
+            socket = new WebSocket(wsUrl);
+            
+            socket.onopen = () => {
+                console.log("Conexión WebSocket establecida");
+                showNotification('Conexión establecida', 'success');
+            };
+            
+            socket.onclose = () => {
+                console.log("WebSocket cerrado, reconectando...");
+                setTimeout(connectWebSocket, 3000);
+            };
+            
+            socket.onerror = (error) => {
+                console.error("Error en WebSocket:", error);
+            };
+            
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            };
+        }
+
+        function handleWebSocketMessage(data) {
             if (data.type === "user_count") {
-                document.getElementById('userCount').textContent = data.count;
+                document.getElementById('userCount').textContent = `${data.count} usuarios`;
                 document.getElementById('connectedUsers').textContent = data.count;
             } else if (data.type === "new_report") {
                 addReport(data.data, true);
-                showNotification(`Nuevo Reporte`, `Se ha registrado un nuevo reporte #${data.data.id}`, new Date().toLocaleTimeString());
+                showNotification('Nuevo reporte recibido', 'info');
                 updateMetrics();
             } else if (data.type === "delete_report") {
                 removeReport(data.data.id);
                 updateMetrics();
             }
-        };
+        }
 
-        // Cargar reportes iniciales
         async function loadReports() {
+            showLoading(true);
             try {
-                const response = await fetch('http://18.233.249.90:5000/reports/');
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const response = await fetch(`${API_BASE}/reports/`);
+                
+                if (!response.ok) throw new Error('Error cargando reportes');
+                
                 const reports = await response.json();
-                reports.forEach(report => addReport(report, false));
+                
+                // Limpiar lista actual
+                const reportList = document.getElementById('reportList');
+                reportList.innerHTML = '';
+                
+                if (reports.length === 0) {
+                    document.getElementById('emptyState').style.display = 'flex';
+                } else {
+                    document.getElementById('emptyState').style.display = 'none';
+                    reports.forEach(report => addReport(report, false));
+                }
+                
                 updateMetrics();
             } catch (error) {
                 console.error('Error cargando reportes:', error);
+                showNotification('Error cargando reportes', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/stats/`);
+                if (!response.ok) throw new Error('Error cargando estadísticas');
+                
+                const stats = await response.json();
+                
+                document.getElementById('connectedUsers').textContent = stats.connected_users;
+                document.getElementById('totalReports').textContent = stats.total_reports;
+                document.getElementById('activeReports').textContent = stats.active_reports;
+                document.getElementById('responseTime').textContent = stats.response_time;
+                document.getElementById('userCount').textContent = `${stats.connected_users} usuarios`;
+            } catch (error) {
+                console.error('Error cargando estadísticas:', error);
             }
         }
 
         function addReport(report, isRealTime = false) {
+            // Ocultar empty state
+            document.getElementById('emptyState').style.display = 'none';
+            
+            // Agregar marcador al mapa
             const marker = L.marker([report.latitude, report.longitude]).addTo(map);
-            marker.bindPopup(`ID: ${report.id}<br>Fecha: ${new Date(report.timestamp).toLocaleString()}`);
+            const popupContent = `
+                <div style="text-align: center;">
+                    <strong>ID: ${report.id}</strong><br>
+                    ${report.city || 'Ubicación'}<br>
+                    <small>${new Date(report.timestamp).toLocaleString()}</small><br>
+                    ${report.incident_type ? `<br>Tipo: ${report.incident_type}` : ''}
+                    ${report.severity ? `<br>Severidad: ${report.severity}` : ''}
+                </div>
+            `;
+            marker.bindPopup(popupContent);
             marker.on('click', () => showPhoto(report.photo_base64, report.id));
             markers.set(report.id, marker);
-
+            
+            // Agregar a la lista
             const reportItem = document.createElement('div');
             reportItem.className = 'report-item';
-            if (isRealTime) setTimeout(() => reportItem.classList.add('fade-in'), 50);
             reportItem.dataset.id = report.id;
-            const img = document.createElement('img');
-            img.src = `data:image/jpeg;base64,${report.photo_base64}`;
-            img.alt = `Reporte #${report.id}`;
-            img.className = 'report-image';
-            img.onclick = () => showPhoto(report.photo_base64, report.id);
-            const info = document.createElement('div');
-            info.className = 'report-info';
-            info.innerHTML = `
-                <div class="report-id">ID: ${report.id}</div>
-                <div class="report-date">${new Date(report.timestamp).toLocaleString()}</div>
-                <div class="report-status">Activo</div>
+            
+            const statusClass = report.status === 'Resuelto' ? 'active' : 'pending';
+            
+            reportItem.innerHTML = `
+                <img src="data:image/jpeg;base64,${report.photo_base64}" 
+                     alt="Reporte #${report.id}" 
+                     class="report-image"
+                     onclick="showPhoto('${report.photo_base64}', ${report.id})">
+                <div class="report-info">
+                    <div class="report-id">ID: ${report.id}</div>
+                    <div class="report-date">${new Date(report.timestamp).toLocaleString()}</div>
+                    <div class="report-status ${statusClass}">${report.status || 'Activo'}</div>
+                </div>
+                <button class="delete-btn" onclick="deleteReport(${report.id})">Eliminar</button>
             `;
-            const deleteBtn = document.createElement('button');
-            deleteBtn.textContent = 'Eliminar';
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.onclick = () => deleteReport(report.id);
-            reportItem.appendChild(img);
-            reportItem.appendChild(info);
-            reportItem.appendChild(deleteBtn);
-
-            document.getElementById('reportList').prepend(reportItem);
+            
+            const reportList = document.getElementById('reportList');
+            if (isRealTime) {
+                reportList.insertBefore(reportItem, reportList.firstChild);
+            } else {
+                reportList.appendChild(reportItem);
+            }
+            
             reportCount++;
             document.getElementById('totalReportsCount').textContent = reportCount;
         }
 
         function removeReport(reportId) {
+            // Remover del DOM
             const reportItem = document.querySelector(`.report-item[data-id="${reportId}"]`);
             if (reportItem) reportItem.remove();
+            
+            // Remover marcador del mapa
             const marker = markers.get(reportId);
             if (marker) {
                 map.removeLayer(marker);
                 markers.delete(reportId);
             }
-            reportCount--;
+            
+            reportCount = Math.max(0, reportCount - 1);
             document.getElementById('totalReportsCount').textContent = reportCount;
+            
+            if (reportCount === 0) {
+                document.getElementById('emptyState').style.display = 'flex';
+            }
+        }
+
+        async function deleteReport(reportId) {
+            if (!confirm('¿Estás seguro de eliminar este reporte?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/reports/${reportId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        showNotification('Sesión expirada. Por favor inicia sesión nuevamente.', 'error');
+                        setTimeout(() => {
+                            window.location.href = '/login';
+                        }, 2000);
+                        return;
+                    }
+                    throw new Error('Error eliminando reporte');
+                }
+                
+                showNotification('Reporte eliminado exitosamente', 'success');
+            } catch (error) {
+                console.error('Error eliminando reporte:', error);
+                showNotification('Error al eliminar el reporte', 'error');
+            }
         }
 
         function showPhoto(base64, id) {
             const modal = document.getElementById('photoModal');
             const modalImage = document.getElementById('modalImage');
             const modalId = document.getElementById('modalId');
+            
             modalImage.src = `data:image/jpeg;base64,${base64}`;
             modalId.textContent = `Reporte ID: ${id}`;
             modal.style.display = 'flex';
-
-            modalImage.onload = () => {
-                const maxWidth = window.innerWidth * 0.8;
-                const maxHeight = window.innerHeight * 0.7;
-                let width = modalImage.naturalWidth;
-                let height = modalImage.naturalHeight;
-                if (width > maxWidth) {
-                    height = (maxWidth / width) * height;
-                    width = maxWidth;
-                }
-                if (height > maxHeight) {
-                    width = (maxHeight / height) * width;
-                    height = maxHeight;
-                }
-                modalImage.style.width = `${width}px`;
-                modalImage.style.height = `${height}px`;
-            };
-
+            
+            // Cerrar modal
             document.querySelector('.close').onclick = () => modal.style.display = 'none';
-            window.onclick = (event) => { if (event.target == modal) modal.style.display = 'none'; };
+            window.onclick = (event) => {
+                if (event.target == modal) modal.style.display = 'none';
+            };
         }
 
-        async function deleteReport(reportId) {
-            if (confirm('¿Estás seguro de eliminar este reporte?')) {
-                const response = await fetch(`http://18.233.249.90:5000/reports/${reportId}`, { method: 'DELETE' });
-                if (!response.ok) alert('Error al eliminar el reporte');
-            }
-        }
-
-        function showNotification(title, message, time) {
+        function showNotification(message, type = 'info') {
             const notifications = document.getElementById('notifications');
             const notification = document.createElement('div');
             notification.className = 'notification';
+            
+            let icon = 'ℹ️';
+            if (type === 'success') icon = '✅';
+            if (type === 'error') icon = '❌';
+            if (type === 'warning') icon = '⚠️';
+            
             notification.innerHTML = `
-                <div class="notification-title">${title}</div>
-                <div class="notification-message">${message} - ${time}</div>
+                <div class="notification-icon">${icon}</div>
+                <div class="notification-content">
+                    <div class="notification-title">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
+                    <div class="notification-message">${message}</div>
+                    <div class="notification-time">${new Date().toLocaleTimeString()}</div>
+                </div>
             `;
+            
             notifications.appendChild(notification);
-            setTimeout(() => notification.remove(), 4000); // Desaparece después de 4 segundos
+            
+            // Auto-remover después de 5 segundos
+            setTimeout(() => notification.remove(), 5000);
         }
 
         function updateMetrics() {
             document.getElementById('totalReports').textContent = reportCount;
-            document.getElementById('activeReports').textContent = Math.floor(reportCount * 0.7); // Ejemplo: 70% activos
+            document.getElementById('activeReports').textContent = Math.floor(reportCount * 0.7);
         }
 
-        // Cargar al iniciar
-        loadReports();
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        }
+
+        function logout() {
+            if (confirm('¿Estás seguro de cerrar sesión?')) {
+                localStorage.clear();
+                window.location.href = '/login';
+            }
+        }
     </script>
 </body>
 </html>
