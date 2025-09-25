@@ -585,7 +585,7 @@
                     
                     // Redirigir después de un breve delay
                     setTimeout(() => {
-                        window.location.href = '/';
+                        window.location.href = '/dashboard';
                     }, 1500);
                     
                 } else {
@@ -671,7 +671,7 @@
             const token = localStorage.getItem('access_token');
             const rememberMe = localStorage.getItem('remember_me');
             
-            // Si hay un token válido y el usuario eligió ser recordado, redirigir automáticamente
+            // Si hay un token válido y el usuario eligió ser recordado, verificar y redirigir
             if (token && rememberMe === 'true') {
                 // Verificar que el token siga siendo válido
                 fetch(`${API_BASE}/users/me`, {
@@ -681,12 +681,14 @@
                 })
                 .then(response => {
                     if (response.ok) {
-                        window.location.href = '/';
+                        // Token válido, redirigir al dashboard
+                        window.location.href = '/dashboard';
                     } else {
                         // Token inválido, limpiar localStorage
                         localStorage.removeItem('access_token');
                         localStorage.removeItem('token_type');
                         localStorage.removeItem('username');
+                        localStorage.removeItem('remember_me');
                     }
                 })
                 .catch(error => {
