@@ -30,7 +30,7 @@ Base = declarative_base()
 
 # ==================== MODELOS DE BASE DE DATOS ====================
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "public.users"
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
