@@ -39,7 +39,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 class Report(Base):
-    __tablename__ = "reports"
+    __tablename__ = "public.reports"
     id = Column(Integer, primary_key=True, index=True)
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
