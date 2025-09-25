@@ -417,9 +417,4 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    print("🚀 Iniciando Reports Center con Sistema de Autenticación")
-    print("📊 Aplicación web: http://localhost:8000")
-    print("🔐 Login: http://localhost:8000/login")
-    print("📋 API Docs: http://localhost:8000/docs")
-    print("=" * 50)
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=5000, reload=True)
