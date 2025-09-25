@@ -279,7 +279,9 @@ async def serve_dashboard():
     El frontend verifica el token y redirige a / si no está autenticado.
     """
     try:
-        with open("index.html", "r", encoding="utf-8") as file:
+        import os
+        file_path = os.path.join(os.path.dirname(__file__), "index.html")
+        with open(file_path, "r", encoding="utf-8") as file:
             return HTMLResponse(content=file.read())
     except FileNotFoundError:
         return HTMLResponse(content="<h1>Error: index.html no encontrado</h1>", status_code=404)
