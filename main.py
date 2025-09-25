@@ -261,45 +261,23 @@ async def broadcast(message: dict):
 
 # ==================== ENDPOINTS DE PÁGINAS HTML ====================
 @app.get("/", response_class=HTMLResponse)
-async def read_root():
-    """Redirige a login si no hay autenticación, o sirve index.html si la hay"""
-    # Primero intentamos servir la página de login
-    # El JavaScript en el frontend manejará la verificación del token
+async def serve_login():
+    """
+    Sirve la página de login como raíz.
+    Si el usuario ya tiene un token válido, el frontend lo redirige automáticamente a /dashboard.
+    """
     try:
-        # Verificar si existe un token en las cookies o localStorage (esto se hace en el frontend)
-        # Por ahora, servimos login.html como página principal
         with open("login.html", "r", encoding="utf-8") as file:
-            login_content = file.read()
-            # Modificamos el script para que verifique si hay token y redirija automáticamente
-            login_with_redirect = login_content.replace(
-                "window.addEventListener('DOMContentLoaded', () => {",
-                """window.addEventListener('DOMContentLoaded', () => {
-                    // Verificar si ya hay un token válido
-                    const token = localStorage.getItem('access_token');
-                    if (token) {
-                        // Verificar que el token sea válido antes de redirigir
-                        fetch('/users/me', {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        })
-                        .then(response => {
-                            if (response.ok) {
-                                // Token válido, redirigir al dashboard
-                                window.location.href = '/dashboard';
-                            }
-                        })
-                        .catch(() => {
-                            // Error de red, mantener en login
-                        });
-                    }
-                """
-            )
-            return HTMLResponse(content=login_with_redirect)
+            return HTMLResponse(content=file.read())
     except FileNotFoundError:
         return HTMLResponse(content="<h1>Error: login.html no encontrado</h1>", status_code=404)
 
 @app.get("/dashboard", response_class=HTMLResponse)
-async def read_dashboard():
-    """Sirve el dashboard principal (index.html)"""
+async def serve_dashboard():
+    """
+    Sirve el dashboard principal (index.html).
+    El frontend verifica el token y redirige a / si no está autenticado.
+    """
     try:
         with open("index.html", "r", encoding="utf-8") as file:
             return HTMLResponse(content=file.read())
@@ -307,8 +285,10 @@ async def read_dashboard():
         return HTMLResponse(content="<h1>Error: index.html no encontrado</h1>", status_code=404)
 
 @app.get("/login", response_class=HTMLResponse)
-async def read_login():
-    """Sirve la página de login explícitamente"""
+async def serve_login_explicit():
+    """
+    Sirve la página de login explícitamente (opcional).
+    """
     try:
         with open("login.html", "r", encoding="utf-8") as file:
             return HTMLResponse(content=file.read())
