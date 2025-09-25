@@ -168,9 +168,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
-    allow_origin_regex=r".*"
+    expose_headers=["*"]
 )
 
 # ==================== VARIABLES GLOBALES ====================
