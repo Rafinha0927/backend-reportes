@@ -291,6 +291,13 @@
             object-fit: cover;
             cursor: pointer;
             border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .report-image:hover {
+            transform: scale(1.05);
+            border-color: #4A90E2;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
         }
 
         .report-info {
@@ -342,6 +349,22 @@
             background: rgba(239, 68, 68, 0.4);
             color: #fff;
             transform: scale(1.05);
+        }
+
+        /* Animación para nuevos reportes */
+        .elegant-in {
+            animation: elegantSlideIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes elegantSlideIn {
+            0% {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         /* Empty state */
@@ -450,7 +473,7 @@
             margin-top: 2px;
         }
 
-        /* Modal */
+        /* Modal mejorado */
         .modal {
             display: none;
             position: fixed;
@@ -458,7 +481,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             justify-content: center;
             align-items: center;
             z-index: 1000;
@@ -467,16 +490,16 @@
 
         .modal-content {
             background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px);
             padding: 20px;
             border-radius: 15px;
             text-align: center;
-            max-width: 90%;
+            max-width: 90vw;
             max-height: 90vh;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             position: relative;
             animation: zoomIn 0.3s ease-out;
-            overflow: auto;
+            overflow: hidden;
         }
 
         @keyframes fadeInModal {
@@ -497,11 +520,21 @@
             font-size: 30px;
             font-weight: bold;
             cursor: pointer;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .close:hover {
             color: #fff;
+            background: rgba(239, 68, 68, 0.8);
+            transform: scale(1.1);
         }
 
         #modalImage {
@@ -512,13 +545,16 @@
             border-radius: 10px;
             border: 2px solid rgba(255, 255, 255, 0.2);
             margin: 15px 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
         }
 
         #modalId {
-            margin-top: 10px;
+            margin-top: 15px;
             font-size: 1.5em;
             color: #fff;
             font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         @media (max-width: 768px) {
@@ -527,6 +563,16 @@
             .metrics { grid-template-columns: 1fr; }
             .header { flex-direction: column; gap: 15px; text-align: center; }
             .header-right { justify-content: center; flex-wrap: wrap; }
+            
+            .modal-content {
+                margin: 10px;
+                max-width: calc(100vw - 20px);
+                max-height: calc(100vh - 20px);
+            }
+            
+            #modalImage {
+                max-height: 70vh;
+            }
         }
     </style>
 </head>
@@ -620,7 +666,7 @@
     <!-- Notificaciones -->
     <div class="notifications" id="notifications"></div>
 
-    <!-- Modal -->
+    <!-- Modal mejorado -->
     <div id="photoModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -778,24 +824,35 @@
             }
         }
 
+        // FUNCIÓN MEJORADA addReport con tu código implementado
         function addReport(report, isRealTime = false) {
             // Remover empty state si existe
             const emptyState = document.querySelector('.empty-state');
             if (emptyState) emptyState.remove();
             
-            // Agregar marcador al mapa
+            // Agregar marcador al mapa con funcionalidad mejorada
             const marker = L.marker([report.latitude, report.longitude]).addTo(map);
             marker.bindPopup(`
                 <strong>ID: ${report.id}</strong><br>
                 ${report.city || 'Ubicación'}<br>
                 ${new Date(report.timestamp).toLocaleString()}
             `);
+            
+            // Hacer que el marcador sea clickeable para mostrar la foto
+            marker.on('click', () => showPhoto(report.photo_base64, report.id));
             markers.set(report.id, marker);
             
-            // Agregar a la lista
+            // Crear elemento del reporte con animación mejorada
             const reportItem = document.createElement('div');
             reportItem.className = 'report-item';
             reportItem.dataset.id = report.id;
+            
+            // Aplicar animación si es en tiempo real
+            if (isRealTime) {
+                setTimeout(() => {
+                    reportItem.classList.add('elegant-in');
+                }, 50);
+            }
             
             const statusClass = report.status === 'Resuelto' ? 'active' : 'pending';
             
@@ -819,10 +876,18 @@
                 reportList.appendChild(reportItem);
             }
             
+            // Limpiar animación después de completarla
+            if (isRealTime) {
+                reportItem.addEventListener('animationend', () => {
+                    reportItem.classList.remove('elegant-in');
+                }, { once: true });
+            }
+            
             reportCount++;
             document.getElementById('totalReportsCount').textContent = reportCount;
         }
 
+        // FUNCIÓN MEJORADA removeReport con tu código implementado
         function removeReport(reportId) {
             const reportItem = document.querySelector(`.report-item[data-id="${reportId}"]`);
             if (reportItem) reportItem.remove();
@@ -845,6 +910,56 @@
                     </div>
                 `;
             }
+        }
+
+        // FUNCIÓN MEJORADA showPhoto con redimensionamiento automático responsivo
+        function showPhoto(base64, id) {
+            const modal = document.getElementById('photoModal');
+            const modalImage = document.getElementById('modalImage');
+            const modalId = document.getElementById('modalId');
+            
+            modalImage.src = `data:image/jpeg;base64,${base64}`;
+            modalId.textContent = `Reporte ID: ${id}`;
+            modal.style.display = 'flex';
+
+            // Redimensionamiento automático responsivo
+            modalImage.onload = () => {
+                const maxWidth = window.innerWidth * 0.8;
+                const maxHeight = window.innerHeight * 0.7;
+                let width = modalImage.naturalWidth;
+                let height = modalImage.naturalHeight;
+
+                // Calcular dimensiones manteniendo aspecto
+                if (width > maxWidth) {
+                    height = (maxWidth / width) * height;
+                    width = maxWidth;
+                }
+                if (height > maxHeight) {
+                    width = (maxHeight / height) * width;
+                    height = maxHeight;
+                }
+                
+                modalImage.style.width = `${width}px`;
+                modalImage.style.height = `${height}px`;
+            };
+
+            // Eventos para cerrar el modal
+            document.querySelector('.close').onclick = () => {
+                modal.style.display = 'none';
+            };
+
+            window.onclick = (event) => {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            };
+            
+            // Cerrar con tecla Escape
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && modal.style.display === 'flex') {
+                    modal.style.display = 'none';
+                }
+            });
         }
 
         async function deleteReport(reportId) {
@@ -874,18 +989,6 @@
             }
         }
 
-        function showPhoto(base64, id) {
-            const modal = document.getElementById('photoModal');
-            document.getElementById('modalImage').src = `data:image/jpeg;base64,${base64}`;
-            document.getElementById('modalId').textContent = `Reporte ID: ${id}`;
-            modal.style.display = 'flex';
-            
-            document.querySelector('.close').onclick = () => modal.style.display = 'none';
-            window.onclick = (event) => {
-                if (event.target == modal) modal.style.display = 'none';
-            };
-        }
-
         function showNotification(message, type = 'info') {
             const notifications = document.getElementById('notifications');
             const notification = document.createElement('div');
@@ -905,7 +1008,7 @@
             `;
             
             notifications.appendChild(notification);
-            setTimeout(() => notification.remove(),4000);
+            setTimeout(() => notification.remove(), 4000);
         }
 
         function updateMetrics() {
@@ -925,5 +1028,4 @@
         }
     </script>
 </body>
-</html> 
-            
+</html>
