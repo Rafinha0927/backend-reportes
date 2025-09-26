@@ -459,14 +459,14 @@
                 <label for="regPassword">Contraseña</label>
                 <div class="input-wrapper">
                     <span class="input-icon">🔒</span>
-                    <input type="password" id="regPassword" name="password" placeholder="Mínimo 8 caracteres" required minlength="8">
+                    <input type="password" id="regPassword" name="password" placeholder="Mínimo 8 caracteres, máximo 72" required minlength="8" maxlength="72">
                 </div>
             </div>
             <div class="form-group">
                 <label for="regConfirmPassword">Confirmar Contraseña</label>
                 <div class="input-wrapper">
                     <span class="input-icon">🔐</span>
-                    <input type="password" id="regConfirmPassword" placeholder="Repite tu contraseña" required>
+                    <input type="password" id="regConfirmPassword" placeholder="Repite tu contraseña" required maxlength="72">
                 </div>
             </div>
             <button type="submit">
@@ -609,6 +609,12 @@
             const submitButton = registerForm.querySelector('button[type="submit"]');
             const password = document.getElementById('regPassword').value;
             const confirmPassword = document.getElementById('regConfirmPassword').value;
+            
+            // Validar longitud de contraseña
+            if (password.length > 72) {
+                showMessage(registerError, '❌ La contraseña no puede tener más de 72 caracteres');
+                return;
+            }
             
             // Validar que las contraseñas coincidan
             if (password !== confirmPassword) {
