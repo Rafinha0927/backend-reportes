@@ -30,7 +30,7 @@ Base = declarative_base()
 
 # ==================== MODELOS DE BASE DE DATOS ====================
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "public.users"
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
@@ -39,7 +39,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 class Report(Base):
-    __tablename__ = "reports"
+    __tablename__ = "public.reports"
     id = Column(Integer, primary_key=True, index=True)
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
@@ -119,11 +119,7 @@ def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password):
-    # bcrypt tiene un límite de 72 bytes, truncamos si es necesario
-    password_bytes = password.encode('utf-8')
-    if len(password_bytes) > 72:
-        password_bytes = password_bytes[:72]
-    return pwd_context.hash(password_bytes.decode('utf-8'))
+    return pwd_context.hash(password)
 
 def authenticate_user(db: Session, username: str, password: str):
     user = db.query(User).filter(User.username == username).first()
@@ -172,9 +168,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
-    allow_origin_regex=r".*"
+    expose_headers=["*"]
 )
 
 # ==================== VARIABLES GLOBALES ====================
@@ -265,54 +261,36 @@ async def broadcast(message: dict):
 
 # ==================== ENDPOINTS DE PÁGINAS HTML ====================
 @app.get("/", response_class=HTMLResponse)
-async def read_root():
-    """Redirige a login si no hay autenticación, o sirve index.html si la hay"""
-    # Primero intentamos servir la página de login
-    # El JavaScript en el frontend manejará la verificación del token
+async def serve_login():
+    """
+    Sirve la página de login como raíz.
+    Si el usuario ya tiene un token válido, el frontend lo redirige automáticamente a /dashboard.
+    """
     try:
-        # Verificar si existe un token en las cookies o localStorage (esto se hace en el frontend)
-        # Por ahora, servimos login.html como página principal
         with open("login.html", "r", encoding="utf-8") as file:
-            login_content = file.read()
-            # Modificamos el script para que verifique si hay token y redirija automáticamente
-            login_with_redirect = login_content.replace(
-                "window.addEventListener('DOMContentLoaded', () => {",
-                """window.addEventListener('DOMContentLoaded', () => {
-                    // Verificar si ya hay un token válido
-                    const token = localStorage.getItem('access_token');
-                    if (token) {
-                        // Verificar que el token sea válido antes de redirigir
-                        fetch('/users/me', {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        })
-                        .then(response => {
-                            if (response.ok) {
-                                // Token válido, redirigir al dashboard
-                                window.location.href = '/dashboard';
-                            }
-                        })
-                        .catch(() => {
-                            // Error de red, mantener en login
-                        });
-                    }
-                """
-            )
-            return HTMLResponse(content=login_with_redirect)
+            return HTMLResponse(content=file.read())
     except FileNotFoundError:
         return HTMLResponse(content="<h1>Error: login.html no encontrado</h1>", status_code=404)
 
 @app.get("/dashboard", response_class=HTMLResponse)
-async def read_dashboard():
-    """Sirve el dashboard principal (index.html)"""
+async def serve_dashboard():
+    """
+    Sirve el dashboard principal (index.html).
+    El frontend verifica el token y redirige a / si no está autenticado.
+    """
     try:
-        with open("index.html", "r", encoding="utf-8") as file:
+        import os
+        file_path = os.path.join(os.path.dirname(__file__), "index.html")
+        with open(file_path, "r", encoding="utf-8") as file:
             return HTMLResponse(content=file.read())
     except FileNotFoundError:
         return HTMLResponse(content="<h1>Error: index.html no encontrado</h1>", status_code=404)
 
 @app.get("/login", response_class=HTMLResponse)
-async def read_login():
-    """Sirve la página de login explícitamente"""
+async def serve_login_explicit():
+    """
+    Sirve la página de login explícitamente (opcional).
+    """
     try:
         with open("login.html", "r", encoding="utf-8") as file:
             return HTMLResponse(content=file.read())
@@ -441,9 +419,4 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    print("🚀 Iniciando Reports Center con Sistema de Autenticación")
-    print("📊 Aplicación web: http://localhost:8000")
-    print("🔐 Login: http://localhost:8000/login")
-    print("📋 API Docs: http://localhost:8000/docs")
-    print("=" * 50)
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=5000, reload=True)
