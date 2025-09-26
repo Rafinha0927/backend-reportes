@@ -7,14 +7,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from pydantic import BaseModel, validator
 from datetime import datetime, timedelta
+from passlib.context import CryptContext
 from jose import JWTError, jwt
 from typing import List, Optional
 import json
 import logging
 import secrets
-import hashlib
-import hmac
-import base64
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -57,68 +55,9 @@ class Report(Base):
 # Crear todas las tablas
 Base.metadata.create_all(bind=engine)
 
-# ==================== CONFIGURACIÓN DE SEGURIDAD CON SCRYPT ====================
+# ==================== CONFIGURACIÓN DE SEGURIDAD ====================
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-def get_password_hash(password: str) -> str:
-    """
-    Genera hash de contraseña usando scrypt (incluido en Python 3.6+)
-    MÁS SEGURO que SHA-256, similar a bcrypt
-    """
-    # Truncar contraseña si es muy larga (como lo hace bcrypt)
-    if len(password.encode('utf-8')) > 72:
-        password = password[:72]
-    
-    # Generar salt aleatorio (16 bytes)
-    salt = secrets.token_bytes(16)
-    
-    # Generar hash usando scrypt
-    # n=2^14 (factor de costo), r=8, p=1 (parámetros recomendados)
-    password_hash = hashlib.scrypt(
-        password.encode('utf-8'),
-        salt=salt,
-        n=16384,  # 2^14 - factor de costo
-        r=8,      # factor de bloque
-        p=1,      # factor de paralelización
-        dklen=32  # longitud de la clave derivada
-    )
-    
-    # Combinar salt + hash y codificar en base64
-    combined = salt + password_hash
-    return base64.b64encode(combined).decode('utf-8')
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """
-    Verifica contraseña contra hash almacenado
-    """
-    try:
-        # Truncar contraseña si es muy larga (como lo hace bcrypt)
-        if len(plain_password.encode('utf-8')) > 72:
-            plain_password = plain_password[:72]
-        
-        # Decodificar de base64
-        combined = base64.b64decode(hashed_password.encode('utf-8'))
-        
-        # Separar salt (primeros 16 bytes) y hash (resto)
-        salt = combined[:16]
-        stored_hash = combined[16:]
-        
-        # Recrear hash con la contraseña ingresada
-        calculated_hash = hashlib.scrypt(
-            plain_password.encode('utf-8'),
-            salt=salt,
-            n=16384,
-            r=8,
-            p=1,
-            dklen=32
-        )
-        
-        # Comparación segura contra timing attacks
-        return hmac.compare_digest(calculated_hash, stored_hash)
-        
-    except Exception as e:
-        logging.error(f"Error verificando contraseña: {e}")
-        return False
 
 # ==================== MODELOS PYDANTIC ====================
 class UserCreate(BaseModel):
@@ -175,6 +114,12 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
 
 def authenticate_user(db: Session, username: str, password: str):
     user = db.query(User).filter(User.username == username).first()
