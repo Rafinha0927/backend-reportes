@@ -30,9 +30,9 @@ PASSWORD_RESET_EXPIRE_MINUTES = 30
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 SMTP_USERNAME = "rafaeld0927@gmail.com"  # CAMBIAR POR TU CORREO
-SMTP_PASSWORD = "Rafan0927*_3040556"  # CAMBIAR POR APP PASSWORD DE GMAIL
+SMTP_PASSWORD = "tojs mmep dwkj cstl"  # CAMBIAR POR APP PASSWORD DE GMAIL
 SMTP_FROM_EMAIL = "rafaeld0927@gmail.com"  # CAMBIAR POR TU CORREO
-SMTP_FROM_NAME = "Reports Center"
+SMTP_FROM_NAME = "Reports Center Backend"
 
 # Configuración de la BD PostgreSQL en RDS
 DATABASE_URL = "postgresql://postgres:Jd3201092@reports.c8f8a6g2c9he.us-east-1.rds.amazonaws.com:5432/reports"
