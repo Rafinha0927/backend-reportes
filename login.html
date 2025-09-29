@@ -22,7 +22,7 @@
             align-items: center;
             overflow: hidden;
             position: relative;
-            overflow-y: scroll; /* o auto */
+            overflow-y: scroll;
         }
 
         /* Background gradients */
@@ -247,7 +247,7 @@
         }
 
         /* Buttons */
-        button[type="submit"] {
+        button[type="submit"], .action-button {
             width: 100%;
             padding: 14px;
             background: linear-gradient(135deg, #3b82f6, #8b5cf6);
@@ -262,7 +262,7 @@
             overflow: hidden;
         }
 
-        button[type="submit"]::before {
+        button[type="submit"]::before, .action-button::before {
             content: '';
             position: absolute;
             top: 0;
@@ -273,26 +273,38 @@
             transition: left 0.5s;
         }
 
-        button[type="submit"]:hover::before {
+        button[type="submit"]:hover::before, .action-button:hover::before {
             left: 100%;
         }
 
-        button[type="submit"]:hover {
+        button[type="submit"]:hover, .action-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
         }
 
-        button[type="submit"]:active {
+        button[type="submit"]:active, .action-button:active {
             transform: translateY(0);
         }
 
-        button[type="submit"]:disabled {
+        button[type="submit"]:disabled, .action-button:disabled {
             opacity: 0.6;
             cursor: not-allowed;
         }
 
+        /* Back button */
+        .back-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 15px;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
         /* Loading state */
-        button[type="submit"].loading {
+        button[type="submit"].loading, .action-button.loading {
             pointer-events: none;
             opacity: 0.8;
         }
@@ -308,11 +320,11 @@
             margin: 0 auto;
         }
 
-        button.loading .button-text {
+        button.loading .button-text, .action-button.loading .button-text {
             display: none;
         }
 
-        button.loading .spinner {
+        button.loading .spinner, .action-button.loading .spinner {
             display: block;
         }
 
@@ -412,11 +424,21 @@
             text-decoration: none;
             font-size: 0.875rem;
             transition: color 0.3s ease;
+            cursor: pointer;
         }
 
         .forgot-link:hover {
             color: #60a5fa;
             text-decoration: underline;
+        }
+
+        /* Form transitions */
+        .form-container {
+            transition: all 0.3s ease;
+        }
+
+        .form-hidden {
+            display: none;
         }
 
         /* Responsive */
@@ -450,7 +472,7 @@
         </div>
 
         <!-- Login Form -->
-        <form id="loginForm">
+        <form id="loginForm" class="form-container">
             <div class="form-group">
                 <label for="username">Usuario</label>
                 <div class="input-wrapper">
@@ -470,7 +492,7 @@
                     <input type="checkbox" id="remember" name="remember">
                     <label for="remember">Recordarme</label>
                 </div>
-                <a href="#" class="forgot-link">¿Olvidaste tu contraseña?</a>
+                <a href="#" class="forgot-link" onclick="showForgotPasswordForm(); return false;">¿Olvidaste tu contraseña?</a>
             </div>
             <button type="submit">
                 <span class="button-text">Iniciar Sesión</span>
@@ -480,12 +502,41 @@
             <div class="message success" id="loginSuccess"></div>
         </form>
 
-        <div class="switch-form">
-            <p>¿No tienes cuenta? <a href="#" onclick="showRegisterForm(); return false;">Regístrate aquí</a></p>
-        </div>
+        <!-- Forgot Password Form -->
+        <form id="forgotPasswordForm" class="form-container form-hidden">
+            <button type="button" class="action-button back-button" onclick="showLoginForm()">
+                <span class="button-text">← Volver al Login</span>
+            </button>
+            
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h3 style="color: white; margin-bottom: 10px;">Recuperar Contraseña</h3>
+                <p style="color: rgba(255, 255, 255, 0.6); font-size: 0.9rem;">
+                    Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label for="forgotEmail">Correo Electrónico</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">📧</span>
+                    <input type="email" id="forgotEmail" name="email" placeholder="tu@email.com" required>
+                </div>
+            </div>
+            
+            <button type="submit">
+                <span class="button-text">Enviar Enlace de Recuperación</span>
+                <div class="spinner"></div>
+            </button>
+            <div class="message error" id="forgotPasswordError"></div>
+            <div class="message success" id="forgotPasswordSuccess"></div>
+        </form>
 
         <!-- Register Form (Initially Hidden) -->
-        <form id="registerForm" style="display: none;">
+        <form id="registerForm" class="form-container form-hidden">
+            <button type="button" class="action-button back-button" onclick="showLoginForm()">
+                <span class="button-text">← Volver al Login</span>
+            </button>
+
             <div class="form-group">
                 <label for="regUsername">Usuario</label>
                 <div class="input-wrapper">
@@ -545,8 +596,9 @@
             <div class="message success" id="registerSuccess"></div>
         </form>
 
-        <div class="switch-form" id="switchToLogin" style="display: none;">
-            <p>¿Ya tienes cuenta? <a href="#" onclick="showLoginForm(); return false;">Inicia sesión</a></p>
+        <!-- Switch form options -->
+        <div class="switch-form" id="switchToRegister">
+            <p>¿No tienes cuenta? <a href="#" onclick="showRegisterForm(); return false;">Regístrate aquí</a></p>
         </div>
     </div>
 
@@ -557,113 +609,49 @@
         // Referencias a elementos del DOM
         const loginForm = document.getElementById('loginForm');
         const registerForm = document.getElementById('registerForm');
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        const switchToRegister = document.getElementById('switchToRegister');
+        
+        // Mensajes de error/éxito
         const loginError = document.getElementById('loginError');
         const loginSuccess = document.getElementById('loginSuccess');
         const registerError = document.getElementById('registerError');
         const registerSuccess = document.getElementById('registerSuccess');
-        const switchToLogin = document.getElementById('switchToLogin');
-        const switchToRegister = document.querySelector('.switch-form');
+        const forgotPasswordError = document.getElementById('forgotPasswordError');
+        const forgotPasswordSuccess = document.getElementById('forgotPasswordSuccess');
+        
+        // Elementos de registro
         const regPassword = document.getElementById('regPassword');
         const passwordRequirements = document.getElementById('passwordRequirements');
         const registerButton = document.getElementById('registerButton');
 
-        // Validación de contraseña en tiempo real
-        regPassword.addEventListener('focus', () => {
-            passwordRequirements.classList.add('show');
-        });
-
-        regPassword.addEventListener('input', () => {
-            const password = regPassword.value;
-            validatePasswordRequirements(password);
-        });
-
-        function validatePasswordRequirements(password) {
-            // Longitud mínima
-            const reqLength = document.getElementById('req-length');
-            if (password.length >= 8) {
-                reqLength.classList.add('met');
-                reqLength.classList.remove('not-met');
-                reqLength.querySelector('.requirement-icon').textContent = '✓';
-            } else {
-                reqLength.classList.remove('met');
-                reqLength.classList.add('not-met');
-                reqLength.querySelector('.requirement-icon').textContent = '✗';
-            }
-
-            // Mayúscula
-            const reqUppercase = document.getElementById('req-uppercase');
-            if (/[A-Z]/.test(password)) {
-                reqUppercase.classList.add('met');
-                reqUppercase.classList.remove('not-met');
-                reqUppercase.querySelector('.requirement-icon').textContent = '✓';
-            } else {
-                reqUppercase.classList.remove('met');
-                reqUppercase.classList.add('not-met');
-                reqUppercase.querySelector('.requirement-icon').textContent = '✗';
-            }
-
-            // Minúscula
-            const reqLowercase = document.getElementById('req-lowercase');
-            if (/[a-z]/.test(password)) {
-                reqLowercase.classList.add('met');
-                reqLowercase.classList.remove('not-met');
-                reqLowercase.querySelector('.requirement-icon').textContent = '✓';
-            } else {
-                reqLowercase.classList.remove('met');
-                reqLowercase.classList.add('not-met');
-                reqLowercase.querySelector('.requirement-icon').textContent = '✗';
-            }
-
-            // Número
-            const reqNumber = document.getElementById('req-number');
-            if (/\d/.test(password)) {
-                reqNumber.classList.add('met');
-                reqNumber.classList.remove('not-met');
-                reqNumber.querySelector('.requirement-icon').textContent = '✓';
-            } else {
-                reqNumber.classList.remove('met');
-                reqNumber.classList.add('not-met');
-                reqNumber.querySelector('.requirement-icon').textContent = '✗';
-            }
-
-            // Carácter especial
-            const reqSpecial = document.getElementById('req-special');
-            if (/[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/;`~]/.test(password)) {
-                reqSpecial.classList.add('met');
-                reqSpecial.classList.remove('not-met');
-                reqSpecial.querySelector('.requirement-icon').textContent = '✓';
-            } else {
-                reqSpecial.classList.remove('met');
-                reqSpecial.classList.add('not-met');
-                reqSpecial.querySelector('.requirement-icon').textContent = '✗';
-            }
-
-            // Habilitar/deshabilitar botón de registro
-            const allMet = password.length >= 8 &&
-                          /[A-Z]/.test(password) &&
-                          /[a-z]/.test(password) &&
-                          /\d/.test(password) &&
-                          /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/;`~]/.test(password);
-            
-            registerButton.disabled = !allMet;
-        }
-
-        // Funciones para cambiar entre formularios
-        function showRegisterForm() {
-            loginForm.style.display = 'none';
-            registerForm.style.display = 'block';
-            switchToRegister.style.display = 'none';
-            switchToLogin.style.display = 'block';
-            clearMessages();
-        }
-
+        // ==================== FUNCIONES DE NAVEGACIÓN ====================
         function showLoginForm() {
-            registerForm.style.display = 'none';
-            loginForm.style.display = 'block';
-            switchToLogin.style.display = 'none';
+            hideAllForms();
+            loginForm.classList.remove('form-hidden');
             switchToRegister.style.display = 'block';
-            passwordRequirements.classList.remove('show');
             clearMessages();
+        }
+
+        function showRegisterForm() {
+            hideAllForms();
+            registerForm.classList.remove('form-hidden');
+            switchToRegister.style.display = 'none';
+            clearMessages();
+        }
+
+        function showForgotPasswordForm() {
+            hideAllForms();
+            forgotPasswordForm.classList.remove('form-hidden');
+            switchToRegister.style.display = 'none';
+            clearMessages();
+        }
+
+        function hideAllForms() {
+            loginForm.classList.add('form-hidden');
+            registerForm.classList.add('form-hidden');
+            forgotPasswordForm.classList.add('form-hidden');
+            passwordRequirements.classList.remove('show');
         }
 
         function clearMessages() {
@@ -676,15 +664,9 @@
         function showMessage(element, message, isError = true) {
             element.textContent = message;
             element.style.display = 'flex';
-            if (!isError) {
-                setTimeout(() => {
-                    element.style.display = 'none';
-                }, 3000);
-            } else {
-                setTimeout(() => {
-                    element.style.display = 'none';
-                }, 5000);
-            }
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, isError ? 5000 : 3000);
         }
 
         function setLoadingState(button, isLoading) {
@@ -697,7 +679,48 @@
             }
         }
 
-        // Manejo del formulario de login
+        // ==================== VALIDACIÓN DE CONTRASEÑA ====================
+        regPassword.addEventListener('focus', () => {
+            passwordRequirements.classList.add('show');
+        });
+
+        regPassword.addEventListener('input', () => {
+            const password = regPassword.value;
+            validatePasswordRequirements(password);
+        });
+
+        function validatePasswordRequirements(password) {
+            const requirements = [
+                { id: 'req-length', test: password.length >= 8 },
+                { id: 'req-uppercase', test: /[A-Z]/.test(password) },
+                { id: 'req-lowercase', test: /[a-z]/.test(password) },
+                { id: 'req-number', test: /\d/.test(password) },
+                { id: 'req-special', test: /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/;`~]/.test(password) }
+            ];
+
+            let allMet = true;
+            requirements.forEach(req => {
+                const element = document.getElementById(req.id);
+                const icon = element.querySelector('.requirement-icon');
+                
+                if (req.test) {
+                    element.classList.add('met');
+                    element.classList.remove('not-met');
+                    icon.textContent = '✓';
+                } else {
+                    element.classList.remove('met');
+                    element.classList.add('not-met');
+                    icon.textContent = '✗';
+                    allMet = false;
+                }
+            });
+
+            registerButton.disabled = !allMet;
+        }
+
+        // ==================== MANEJO DE FORMULARIOS ====================
+
+        // Login Form
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             clearMessages();
@@ -751,7 +774,47 @@
             }
         });
 
-        // Manejo del formulario de registro
+        // Forgot Password Form
+        forgotPasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearMessages();
+            
+            const submitButton = forgotPasswordForm.querySelector('button[type="submit"]');
+            setLoadingState(submitButton, true);
+            
+            const email = document.getElementById('forgotEmail').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/forgot-password/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage(forgotPasswordSuccess, '✅ ' + data.message, false);
+                    document.getElementById('forgotEmail').value = '';
+                    
+                    // Opcional: volver al login después de unos segundos
+                    setTimeout(() => {
+                        showLoginForm();
+                    }, 5000);
+                } else {
+                    showMessage(forgotPasswordError, `❌ ${data.detail || 'Error enviando el email'}`);
+                }
+            } catch (error) {
+                console.error('Error en recuperación:', error);
+                showMessage(forgotPasswordError, '❌ Error de conexión. Intenta nuevamente.');
+            } finally {
+                setLoadingState(submitButton, false);
+            }
+        });
+
+        // Register Form
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             clearMessages();
@@ -818,7 +881,7 @@
             }
         });
 
-        // Verificar si hay un token guardado al cargar la página
+        // ==================== INICIALIZACIÓN ====================
         window.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('access_token');
             const rememberMe = localStorage.getItem('remember_me');
@@ -843,12 +906,9 @@
                     console.error('Error verificando token:', error);
                 });
             }
-        });
 
-        // Manejo del link "¿Olvidaste tu contraseña?"
-        document.querySelector('.forgot-link').addEventListener('click', (e) => {
-            e.preventDefault();
-            alert('Por favor contacta al administrador para restablecer tu contraseña.');
+            // Mostrar formulario de login por defecto
+            showLoginForm();
         });
     </script>
 </body>
