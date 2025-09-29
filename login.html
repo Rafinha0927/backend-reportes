@@ -206,6 +206,45 @@
             color: rgba(255, 255, 255, 0.3);
         }
 
+        /* Password strength indicator */
+        .password-requirements {
+            margin-top: 8px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-size: 0.75rem;
+            display: none;
+        }
+
+        .password-requirements.show {
+            display: block;
+        }
+
+        .requirement {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 4px 0;
+            color: rgba(255, 255, 255, 0.5);
+            transition: color 0.3s ease;
+        }
+
+        .requirement.met {
+            color: #10b981;
+        }
+
+        .requirement.not-met {
+            color: #ef4444;
+        }
+
+        .requirement-icon {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         /* Buttons */
         button[type="submit"] {
             width: 100%;
@@ -244,6 +283,11 @@
 
         button[type="submit"]:active {
             transform: translateY(0);
+        }
+
+        button[type="submit"]:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         /* Loading state */
@@ -445,8 +489,9 @@
                 <label for="regUsername">Usuario</label>
                 <div class="input-wrapper">
                     <span class="input-icon">👤</span>
-                    <input type="text" id="regUsername" name="username" placeholder="Elige un nombre de usuario" required>
+                    <input type="text" id="regUsername" name="username" placeholder="Elige un nombre de usuario" required pattern="[a-zA-Z0-9_]{3,50}">
                 </div>
+                <small style="color: rgba(255,255,255,0.5); font-size: 0.75rem; margin-top: 4px; display: block;">Solo letras, números y guiones bajos (3-50 caracteres)</small>
             </div>
             <div class="form-group">
                 <label for="regEmail">Correo Electrónico</label>
@@ -459,7 +504,29 @@
                 <label for="regPassword">Contraseña</label>
                 <div class="input-wrapper">
                     <span class="input-icon">🔒</span>
-                    <input type="password" id="regPassword" name="password" placeholder="Mínimo 8 caracteres" required minlength="8">
+                    <input type="password" id="regPassword" name="password" placeholder="Crea una contraseña segura" required minlength="8">
+                </div>
+                <div class="password-requirements" id="passwordRequirements">
+                    <div class="requirement" id="req-length">
+                        <span class="requirement-icon">○</span>
+                        <span>Mínimo 8 caracteres</span>
+                    </div>
+                    <div class="requirement" id="req-uppercase">
+                        <span class="requirement-icon">○</span>
+                        <span>Una letra mayúscula</span>
+                    </div>
+                    <div class="requirement" id="req-lowercase">
+                        <span class="requirement-icon">○</span>
+                        <span>Una letra minúscula</span>
+                    </div>
+                    <div class="requirement" id="req-number">
+                        <span class="requirement-icon">○</span>
+                        <span>Un número</span>
+                    </div>
+                    <div class="requirement" id="req-special">
+                        <span class="requirement-icon">○</span>
+                        <span>Un carácter especial (!@#$%...)</span>
+                    </div>
                 </div>
             </div>
             <div class="form-group">
@@ -469,7 +536,7 @@
                     <input type="password" id="regConfirmPassword" placeholder="Repite tu contraseña" required>
                 </div>
             </div>
-            <button type="submit">
+            <button type="submit" id="registerButton" disabled>
                 <span class="button-text">Crear Cuenta</span>
                 <div class="spinner"></div>
             </button>
@@ -483,8 +550,8 @@
     </div>
 
     <script>
-        // Configuración de la API (usa la misma IP que ya está configurada)
-        const API_BASE = window.location.origin; // Usa el mismo origen para evitar problemas de CORS
+        // Configuración de la API
+        const API_BASE = window.location.origin;
 
         // Referencias a elementos del DOM
         const loginForm = document.getElementById('loginForm');
@@ -495,6 +562,90 @@
         const registerSuccess = document.getElementById('registerSuccess');
         const switchToLogin = document.getElementById('switchToLogin');
         const switchToRegister = document.querySelector('.switch-form');
+        const regPassword = document.getElementById('regPassword');
+        const passwordRequirements = document.getElementById('passwordRequirements');
+        const registerButton = document.getElementById('registerButton');
+
+        // Validación de contraseña en tiempo real
+        regPassword.addEventListener('focus', () => {
+            passwordRequirements.classList.add('show');
+        });
+
+        regPassword.addEventListener('input', () => {
+            const password = regPassword.value;
+            validatePasswordRequirements(password);
+        });
+
+        function validatePasswordRequirements(password) {
+            // Longitud mínima
+            const reqLength = document.getElementById('req-length');
+            if (password.length >= 8) {
+                reqLength.classList.add('met');
+                reqLength.classList.remove('not-met');
+                reqLength.querySelector('.requirement-icon').textContent = '✓';
+            } else {
+                reqLength.classList.remove('met');
+                reqLength.classList.add('not-met');
+                reqLength.querySelector('.requirement-icon').textContent = '✗';
+            }
+
+            // Mayúscula
+            const reqUppercase = document.getElementById('req-uppercase');
+            if (/[A-Z]/.test(password)) {
+                reqUppercase.classList.add('met');
+                reqUppercase.classList.remove('not-met');
+                reqUppercase.querySelector('.requirement-icon').textContent = '✓';
+            } else {
+                reqUppercase.classList.remove('met');
+                reqUppercase.classList.add('not-met');
+                reqUppercase.querySelector('.requirement-icon').textContent = '✗';
+            }
+
+            // Minúscula
+            const reqLowercase = document.getElementById('req-lowercase');
+            if (/[a-z]/.test(password)) {
+                reqLowercase.classList.add('met');
+                reqLowercase.classList.remove('not-met');
+                reqLowercase.querySelector('.requirement-icon').textContent = '✓';
+            } else {
+                reqLowercase.classList.remove('met');
+                reqLowercase.classList.add('not-met');
+                reqLowercase.querySelector('.requirement-icon').textContent = '✗';
+            }
+
+            // Número
+            const reqNumber = document.getElementById('req-number');
+            if (/\d/.test(password)) {
+                reqNumber.classList.add('met');
+                reqNumber.classList.remove('not-met');
+                reqNumber.querySelector('.requirement-icon').textContent = '✓';
+            } else {
+                reqNumber.classList.remove('met');
+                reqNumber.classList.add('not-met');
+                reqNumber.querySelector('.requirement-icon').textContent = '✗';
+            }
+
+            // Carácter especial
+            const reqSpecial = document.getElementById('req-special');
+            if (/[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/;`~]/.test(password)) {
+                reqSpecial.classList.add('met');
+                reqSpecial.classList.remove('not-met');
+                reqSpecial.querySelector('.requirement-icon').textContent = '✓';
+            } else {
+                reqSpecial.classList.remove('met');
+                reqSpecial.classList.add('not-met');
+                reqSpecial.querySelector('.requirement-icon').textContent = '✗';
+            }
+
+            // Habilitar/deshabilitar botón de registro
+            const allMet = password.length >= 8 &&
+                          /[A-Z]/.test(password) &&
+                          /[a-z]/.test(password) &&
+                          /\d/.test(password) &&
+                          /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/;`~]/.test(password);
+            
+            registerButton.disabled = !allMet;
+        }
 
         // Funciones para cambiar entre formularios
         function showRegisterForm() {
@@ -510,6 +661,7 @@
             loginForm.style.display = 'block';
             switchToLogin.style.display = 'none';
             switchToRegister.style.display = 'block';
+            passwordRequirements.classList.remove('show');
             clearMessages();
         }
 
@@ -571,19 +723,16 @@
                 if (response.ok) {
                     const data = await response.json();
                     
-                    // Guardar el token en localStorage
                     localStorage.setItem('access_token', data.access_token);
                     localStorage.setItem('token_type', data.token_type);
                     localStorage.setItem('username', username);
                     
-                    // Si "Recordarme" está marcado, guardar en localStorage más permanente
                     if (document.getElementById('remember').checked) {
                         localStorage.setItem('remember_me', 'true');
                     }
                     
                     showMessage(loginSuccess, '✅ Login exitoso. Redirigiendo...', false);
                     
-                    // Redirigir después de un breve delay
                     setTimeout(() => {
                         window.location.href = '/dashboard';
                     }, 1500);
@@ -638,13 +787,11 @@
                     const data = await response.json();
                     showMessage(registerSuccess, '✅ Cuenta creada exitosamente. Ahora puedes iniciar sesión.', false);
                     
-                    // Limpiar el formulario
                     registerForm.reset();
+                    passwordRequirements.classList.remove('show');
                     
-                    // Cambiar al formulario de login después de 2 segundos
                     setTimeout(() => {
                         showLoginForm();
-                        // Pre-llenar el username en el login
                         document.getElementById('username').value = username;
                     }, 2000);
                     
@@ -653,7 +800,11 @@
                     let errorMessage = 'Error al crear la cuenta';
                     
                     if (errorData?.detail) {
-                        errorMessage = errorData.detail;
+                        if (Array.isArray(errorData.detail)) {
+                            errorMessage = errorData.detail.map(err => err.msg).join(', ');
+                        } else {
+                            errorMessage = errorData.detail;
+                        }
                     }
                     
                     showMessage(registerError, `❌ ${errorMessage}`);
@@ -671,9 +822,7 @@
             const token = localStorage.getItem('access_token');
             const rememberMe = localStorage.getItem('remember_me');
             
-            // Si hay un token válido y el usuario eligió ser recordado, verificar y redirigir
             if (token && rememberMe === 'true') {
-                // Verificar que el token siga siendo válido
                 fetch(`${API_BASE}/users/me`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -681,10 +830,8 @@
                 })
                 .then(response => {
                     if (response.ok) {
-                        // Token válido, redirigir al dashboard
                         window.location.href = '/dashboard';
                     } else {
-                        // Token inválido, limpiar localStorage
                         localStorage.removeItem('access_token');
                         localStorage.removeItem('token_type');
                         localStorage.removeItem('username');
