@@ -814,7 +814,7 @@ async def start_background_tasks():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5000, reload=True)1>Error: login.html no encontrado</h1>", status_code=404)
+    uvicorn.run(app, host="0.0.0.0", port=5000, reload=True)<h1>Error: login.html no encontrado</h1>", status_code=404)
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
