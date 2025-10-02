@@ -284,17 +284,49 @@
             transform: translateY(-3px);
         }
 
-        .report-image {
+        .report-image-container {
+            position: relative;
             width: 80px;
             height: 80px;
-            border-radius: 8px;
-            object-fit: cover;
             cursor: pointer;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .report-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             border: 2px solid rgba(255, 255, 255, 0.1);
             transition: all 0.3s ease;
         }
 
-        .report-image:hover {
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .view-details {
+            color: white;
+            font-size: 0.8em;
+            text-align: center;
+            padding: 5px;
+        }
+
+        .report-image-container:hover .image-overlay {
+            opacity: 1;
+        }
+
+        .report-image-container:hover .report-image {
             transform: scale(1.05);
             border-color: #4A90E2;
             box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
@@ -893,11 +925,15 @@
             const statusClass = report.status === 'Resuelto' ? 'active' : 'pending';
             
             reportItem.innerHTML = `
-                <img src="data:image/jpeg;base64,${report.photo_base64}" 
-                     alt="Reporte #${report.id}" 
-                     class="report-image"
-                     onclick="showPhoto('${report.photo_base64}', ${report.id})">
-                <div class="report-info">
+                <div class="report-image-container" onclick="showPhoto('${report.photo_base64}', ${report.id})">
+                    <img src="data:image/jpeg;base64,${report.photo_base64}" 
+                         alt="Reporte #${report.id}" 
+                         class="report-image">
+                    <div class="image-overlay">
+                        <span class="view-details">👁️ Ver detalles</span>
+                    </div>
+                </div>
+                <div class="report-info" onclick="showPhoto('${report.photo_base64}', ${report.id})" style="cursor: pointer;">
                     <div class="report-id">ID: ${report.id}</div>
                     <div class="report-location">
                         <strong>${report.city || 'Ubicación no especificada'}</strong>
@@ -908,7 +944,7 @@
                     <div class="report-description">${report.description || 'Sin descripción'}</div>
                     <div class="report-status ${statusClass}">${report.status || 'Pendiente'}</div>
                 </div>
-                <button class="delete-btn" onclick="deleteReport(${report.id})">Eliminar</button>
+                <button class="delete-btn" onclick="event.stopPropagation(); deleteReport(${report.id})">Eliminar</button>
             `;
             
             const reportList = document.getElementById('reportList');
