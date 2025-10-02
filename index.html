@@ -303,19 +303,47 @@
         .report-info {
             flex: 1;
             min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
 
         .report-id {
             font-size: 0.9em;
             font-weight: 600;
             color: #fff;
-            margin-bottom: 5px;
+        }
+
+        .report-location {
+            font-size: 0.85em;
+            color: #4A90E2;
+        }
+
+        .report-location small {
+            color: #a0a0a0;
+            margin-left: 5px;
+        }
+
+        .report-type {
+            font-size: 0.85em;
+            color: #fbbf24;
+            font-weight: 500;
         }
 
         .report-date {
             font-size: 0.8em;
             color: #a0a0a0;
-            margin-bottom: 8px;
+        }
+
+        .report-description {
+            font-size: 0.85em;
+            color: #e0e0e0;
+            max-height: 40px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
         }
 
         .report-status {
@@ -830,13 +858,20 @@
             const emptyState = document.querySelector('.empty-state');
             if (emptyState) emptyState.remove();
             
-            // Agregar marcador al mapa con funcionalidad mejorada
+            // Agregar marcador al mapa con funcionalidad mejorada y más detalles
             const marker = L.marker([report.latitude, report.longitude]).addTo(map);
             marker.bindPopup(`
-                <strong>ID: ${report.id}</strong><br>
-                ${report.city || 'Ubicación'}<br>
-                ${new Date(report.timestamp).toLocaleString()}
-            `);
+                <div style="color: black; padding: 5px;">
+                    <strong>ID: ${report.id}</strong><br>
+                    <strong>Ciudad:</strong> ${report.city || 'No especificada'}<br>
+                    <strong>Tipo:</strong> ${report.incident_type || 'No especificado'}<br>
+                    <strong>Severidad:</strong> ${report.severity || 'No especificada'}<br>
+                    <strong>Estado:</strong> ${report.status || 'Pendiente'}<br>
+                    <strong>Fecha:</strong> ${new Date(report.timestamp).toLocaleString()}<br>
+                    <strong>Descripción:</strong><br>${report.description || 'Sin descripción'}<br>
+                    <em>Click para ver la foto</em>
+                </div>
+            `, { maxWidth: 300 });
             
             // Hacer que el marcador sea clickeable para mostrar la foto
             marker.on('click', () => showPhoto(report.photo_base64, report.id));
@@ -863,8 +898,14 @@
                      onclick="showPhoto('${report.photo_base64}', ${report.id})">
                 <div class="report-info">
                     <div class="report-id">ID: ${report.id}</div>
+                    <div class="report-location">
+                        <strong>${report.city || 'Ubicación no especificada'}</strong>
+                        <small>[${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)}]</small>
+                    </div>
+                    <div class="report-type">${report.incident_type || 'Tipo no especificado'} - ${report.severity || 'Severidad no especificada'}</div>
                     <div class="report-date">${new Date(report.timestamp).toLocaleString()}</div>
-                    <div class="report-status ${statusClass}">${report.status || 'Activo'}</div>
+                    <div class="report-description">${report.description || 'Sin descripción'}</div>
+                    <div class="report-status ${statusClass}">${report.status || 'Pendiente'}</div>
                 </div>
                 <button class="delete-btn" onclick="deleteReport(${report.id})">Eliminar</button>
             `;
