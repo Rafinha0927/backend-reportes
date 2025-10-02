@@ -517,7 +517,7 @@
         }
 
         .modal-content {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(20, 20, 35, 0.95);
             backdrop-filter: blur(20px);
             padding: 20px;
             border-radius: 15px;
@@ -527,7 +527,8 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             position: relative;
             animation: zoomIn 0.3s ease-out;
-            overflow: hidden;
+            overflow-y: auto;
+            color: #fff;
         }
 
         @keyframes fadeInModal {
@@ -954,19 +955,45 @@
         }
 
         // FUNCIÓN MEJORADA showPhoto con redimensionamiento automático responsivo
-        function showPhoto(base64, id) {
+        async function showPhoto(base64, id) {
             const modal = document.getElementById('photoModal');
             const modalImage = document.getElementById('modalImage');
             const modalId = document.getElementById('modalId');
             
             modalImage.src = `data:image/jpeg;base64,${base64}`;
-            modalId.textContent = `Reporte ID: ${id}`;
+            
+            // Obtener los detalles completos del reporte
+            try {
+                const response = await fetch(`${API_BASE}/reports/`);
+                const reports = await response.json();
+                const report = reports.find(r => r.id === id);
+                
+                if (report) {
+                    modalId.innerHTML = `
+                        <div style="text-align: left; padding: 15px; background: rgba(0,0,0,0.7); border-radius: 8px; margin-top: 15px;">
+                            <h3 style="color: #4A90E2; margin-bottom: 10px;">Reporte ID: ${id}</h3>
+                            <p><strong>Ciudad:</strong> ${report.city || 'No especificada'}</p>
+                            <p><strong>Coordenadas:</strong> [${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)}]</p>
+                            <p><strong>Tipo de Incidente:</strong> ${report.incident_type || 'No especificado'}</p>
+                            <p><strong>Severidad:</strong> ${report.severity || 'No especificada'}</p>
+                            <p><strong>Estado:</strong> ${report.status || 'Pendiente'}</p>
+                            <p><strong>Fecha:</strong> ${new Date(report.timestamp).toLocaleString()}</p>
+                            <p><strong>Descripción:</strong></p>
+                            <p style="margin-left: 10px;">${report.description || 'Sin descripción'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error al cargar detalles del reporte:', error);
+                modalId.textContent = `Reporte ID: ${id}`;
+            }
+            
             modal.style.display = 'flex';
 
             // Redimensionamiento automático responsivo
             modalImage.onload = () => {
                 const maxWidth = window.innerWidth * 0.8;
-                const maxHeight = window.innerHeight * 0.7;
+                const maxHeight = window.innerHeight * 0.6; // Reducido para dejar espacio a la descripción
                 let width = modalImage.naturalWidth;
                 let height = modalImage.naturalHeight;
 
