@@ -9,7 +9,7 @@ module.exports = {
       script: "main.py",
 
       // Producción: sin --reload
-      watch: false
+      watch: false,
       autorestart: true,
       max_restarts: 10,
       max_memory_restart: "512M",
