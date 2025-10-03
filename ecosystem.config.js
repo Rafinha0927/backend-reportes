@@ -1,23 +1,19 @@
 module.exports = {
-  apps: [{
-    name: 'reports-center',
-    script: 'main.py',
-    interpreter: '/home/ubuntu/backend-reportes/venv/bin/python3',
-    args: '-m uvicorn main:app --host 0.0.0.0 --port 5000 --reload',
-    cwd: '/home/ubuntu/backend-reportes',
-    instances: 1,
-    autorestart: true,
-    watch: true,
-    max_memory_restart: '1G',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 5000,
-      PYTHONPATH: '/home/ubuntu/backend-reportes',
-      PYTHONUNBUFFERED: 1
-    },
-    error_file: '/home/ubuntu/backend-reportes/logs/err.log',
-    out_file: '/home/ubuntu/backend-reportes/logs/out.log',
-    log_file: '/home/ubuntu/backend-reportes/logs/combined.log',
-    time: true
-  }]
-};
+  apps: [
+    {
+      name: "backend-reportes",
+      cwd: "/home/ubuntu/backend-reportes",
+
+      // Ejecuta uvicorn como módulo de Python para usar el venv
+      interpreter: "/home/ubuntu/backend-reportes/.venv/bin/python",
+      interpreter_args: "-m",
+      script: "uvicorn",
+      args: "main:app --host 0.0.0.0 --port 5000",
+
+      watch: false,
+      autorestart: true,
+      max_restarts: 10,
+      max_memory_restart: "512M",
+    }
+  ]
+}
