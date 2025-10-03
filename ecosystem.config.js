@@ -2,9 +2,8 @@ module.exports = {
   apps: [{
     name: 'reports-center',
     script: 'main.py',
-    cwd: "C:\Users\Not me\Downloads\Github super pro\backend-reportes-1\main.py",
-    interpreter: 'gunicorn',
-    args: '-w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:5000 --timeout 3600',
+    cwd: "C:/Users/Not me/Downloads/Github super pro/backend-reportes-1",
+    interpreter: 'python',
     instances: 1,
     autorestart: true,
     watch: false,
@@ -18,4 +17,5 @@ module.exports = {
     log_file: './logs/combined.log',
     time: true
   }]
-};
+}
+;
