@@ -2,7 +2,6 @@ module.exports = {
   apps: [{
     name: 'reports-center',
     script: 'main.py',
-    args: '-m uvicorn main:app --host 0.0.0.0 --port 5000 --reload',
     cwd: '/home/ubuntu/backend-reportes',
     instances: 1,
     autorestart: true,
