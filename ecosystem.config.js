@@ -1,8 +1,10 @@
 module.exports = {
   apps: [{
     name: 'reports-center',
-    script: 'gunicorn',
-    args: 'uvicorn main:app --host 0.0.0.0 --port 5000 --reload',
+    script: 'main.py',
+    cwd: "C:\Users\Not me\Downloads\Github super pro\backend-reportes-1\main.py",
+    interpreter: 'gunicorn',
+    args: '-w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:5000 --timeout 3600',
     instances: 1,
     autorestart: true,
     watch: false,
