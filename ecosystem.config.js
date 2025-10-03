@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
     name: 'reports-center',
-    script: 'gunicorn',
+    script: 'main.py',
     cwd: '/home/ubuntu/backend-reportes',  // Ruta correcta de tu app
     args: '-w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:5000 --timeout 3600',
     instances: 1,
