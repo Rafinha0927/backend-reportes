@@ -2,7 +2,7 @@ module.exports = {
   apps: [{
     name: 'reports-center',
     script: 'gunicorn',
-    args: '-w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:5000 --timeout 3600',
+    args: 'uvicorn main:app --host 0.0.0.0 --port 5000 --reload',
     instances: 1,
     autorestart: true,
     watch: false,
