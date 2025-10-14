@@ -198,8 +198,73 @@
         /* Contenedor principal */
         .main-container {
             display: grid;
-            grid-template-columns: 1fr 350px;
+            grid-template-columns: 300px 1fr 350px;
             gap: 30px;
+        }
+
+        /* Panel de información del marcador */
+        .marker-info-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            height: 600px;
+            overflow-y: auto;
+        }
+
+        .marker-info-panel .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .close-panel-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-panel-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            transform: scale(1.1);
+        }
+
+        .marker-info-content {
+            color: #e0e0e0;
+        }
+
+        .marker-info-content img {
+            width: 100%;
+            border-radius: 10px;
+            margin: 10px 0;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .marker-info-content .info-row {
+            margin-bottom: 15px;
+        }
+
+        .marker-info-content .info-label {
+            font-weight: 600;
+            color: #4A90E2;
+            margin-bottom: 5px;
+        }
+
+        .marker-info-content .info-value {
+            color: #e0e0e0;
         }
 
         /* Mapa */
@@ -619,11 +684,27 @@
         }
 
         @media (max-width: 768px) {
-            .main-container { grid-template-columns: 1fr; }
-            .map-container, .reports-panel { width: 100%; }
+            .main-container { 
+                grid-template-columns: 1fr; 
+            }
+            .map-container, .reports-panel, .marker-info-panel { 
+                width: 100%;
+                height: auto;
+                min-height: 400px;
+            }
             .metrics { grid-template-columns: 1fr; }
             .header { flex-direction: column; gap: 15px; text-align: center; }
             .header-right { justify-content: center; flex-wrap: wrap; }
+            
+            .marker-info-panel {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 1000;
+                max-height: 50vh;
+                border-radius: 15px 15px 0 0;
+            }
             
             .modal-content {
                 margin: 10px;
@@ -702,6 +783,17 @@
 
         <!-- Contenedor principal -->
         <div class="main-container">
+            <!-- Panel de información del marcador -->
+            <div class="marker-info-panel" id="markerInfoPanel" style="display: none;">
+                <div class="panel-header">
+                    <div class="panel-title">Detalles del Reporte</div>
+                    <button class="close-panel-btn" onclick="closeMarkerInfo()">&times;</button>
+                </div>
+                <div class="marker-info-content" id="markerInfoContent">
+                    <!-- El contenido se llenará dinámicamente -->
+                </div>
+            </div>
+
             <!-- Mapa -->
             <div class="map-container">
                 <div id="map"></div>
@@ -885,29 +977,66 @@
             }
         }
 
+        // Función para mostrar la información del marcador en el panel lateral
+        function showMarkerInfo(report) {
+            const panel = document.getElementById('markerInfoPanel');
+            const content = document.getElementById('markerInfoContent');
+            
+            content.innerHTML = `
+                <img src="data:image/jpeg;base64,${report.photo_base64}" 
+                     alt="Reporte #${report.id}">
+                <div class="info-row">
+                    <div class="info-label">ID</div>
+                    <div class="info-value">${report.id}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Ciudad</div>
+                    <div class="info-value">${report.city || 'No especificada'}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Tipo</div>
+                    <div class="info-value">${report.incident_type || 'No especificado'}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Severidad</div>
+                    <div class="info-value">${report.severity || 'No especificada'}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Estado</div>
+                    <div class="info-value">${report.status || 'Pendiente'}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Fecha</div>
+                    <div class="info-value">${new Date(report.timestamp).toLocaleString()}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Descripción</div>
+                    <div class="info-value">${report.description || 'Sin descripción'}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Ubicación</div>
+                    <div class="info-value">[${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)}]</div>
+                </div>
+            `;
+            
+            panel.style.display = 'block';
+        }
+
+        function closeMarkerInfo() {
+            document.getElementById('markerInfoPanel').style.display = 'none';
+        }
+
         // FUNCIÓN MEJORADA addReport con tu código implementado
         function addReport(report, isRealTime = false) {
             // Remover empty state si existe
             const emptyState = document.querySelector('.empty-state');
             if (emptyState) emptyState.remove();
             
-            // Agregar marcador al mapa con funcionalidad mejorada y más detalles
+            // Agregar marcador al mapa con funcionalidad mejorada
             const marker = L.marker([report.latitude, report.longitude]).addTo(map);
-            marker.bindPopup(`
-                <div style="color: black; padding: 5px;">
-                    <strong>ID: ${report.id}</strong><br>
-                    <strong>Ciudad:</strong> ${report.city || 'No especificada'}<br>
-                    <strong>Tipo:</strong> ${report.incident_type || 'No especificado'}<br>
-                    <strong>Severidad:</strong> ${report.severity || 'No especificada'}<br>
-                    <strong>Estado:</strong> ${report.status || 'Pendiente'}<br>
-                    <strong>Fecha:</strong> ${new Date(report.timestamp).toLocaleString()}<br>
-                    <strong>Descripción:</strong><br>${report.description || 'Sin descripción'}<br>
-                    <em>Click para ver la foto</em>
-                </div>
-            `, { maxWidth: 300 });
             
-            // Hacer que el marcador sea clickeable para mostrar la foto
-            marker.on('click', () => showPhoto(report.photo_base64, report.id));
+            // Hacer que el marcador sea clickeable para mostrar la información en el panel
+            marker.on('click', () => showMarkerInfo(report));
             markers.set(report.id, marker);
             
             // Crear elemento del reporte con animación mejorada
