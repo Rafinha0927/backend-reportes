@@ -198,8 +198,13 @@
         /* Contenedor principal */
         .main-container {
             display: grid;
-            grid-template-columns: 300px 1fr 350px;
+            grid-template-columns: 0fr 1fr 350px;
             gap: 30px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .main-container.show-panel {
+            grid-template-columns: 300px 1fr 350px;
         }
 
         /* Panel de información del marcador */
@@ -210,6 +215,16 @@
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
             height: 600px;
             overflow-y: auto;
+            transition: all 0.3s ease-in-out;
+            width: 0;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .marker-info-panel.visible {
+            width: 300px;
+            opacity: 1;
+            visibility: visible;
         }
 
         .marker-info-panel .panel-header {
@@ -698,12 +713,26 @@
             
             .marker-info-panel {
                 position: fixed;
-                bottom: 0;
+                bottom: -50vh;
                 left: 0;
                 right: 0;
                 z-index: 1000;
                 max-height: 50vh;
                 border-radius: 15px 15px 0 0;
+                width: 100% !important;
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+                transition: transform 0.3s ease-in-out;
+            }
+            
+            .marker-info-panel.visible {
+                transform: translateY(-100%);
+                width: 100% !important;
+            }
+
+            .main-container.show-panel {
+                grid-template-columns: 1fr;
             }
             
             .modal-content {
@@ -1019,11 +1048,20 @@
                 </div>
             `;
             
-            panel.style.display = 'block';
+            panel.classList.add('visible');
+            document.querySelector('.main-container').classList.add('show-panel');
+            // Forzar un reflow del mapa para que se actualice correctamente
+            map.invalidateSize();
         }
 
         function closeMarkerInfo() {
-            document.getElementById('markerInfoPanel').style.display = 'none';
+            const panel = document.getElementById('markerInfoPanel');
+            panel.classList.remove('visible');
+            document.querySelector('.main-container').classList.remove('show-panel');
+            // Forzar un reflow del mapa para que se actualice correctamente
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 300); // Esperar a que termine la transición
         }
 
         // FUNCIÓN MEJORADA addReport con tu código implementado
