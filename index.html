@@ -1217,17 +1217,34 @@
 
         // Verificar autenticación al cargar
         window.addEventListener('DOMContentLoaded', async () => {
+            // Verificar token en localStorage
             authToken = localStorage.getItem('access_token');
             
             if (!authToken) {
                 window.location.href = '/';
                 return;
             }
-            
+
             try {
-                const response = await fetch(`${API_BASE}/users/me`, {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`
+                // Inicializar la aplicación
+                await initializeApp();
+            } catch (error) {
+                console.error('Error initializing app:', error);
+                showNotification('Error', 'Error al inicializar la aplicación', 'error');
+            }
+        });
+
+        function updateUserInfo(user) {
+            currentUser = user;
+            document.querySelector('.user-name').textContent = user.username;
+            document.querySelector('.user-avatar').textContent = user.username.charAt(0).toUpperCase();
+        }
+
+        async function initializeApp() {
+            // Obtener información del usuario
+            const response = await fetch(`${API_BASE}/users/me`, {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
                     }
                 });
                 
@@ -1247,26 +1264,155 @@
             }
         });
 
-        function updateUserInfo(user) {
-            if (user) {
-                document.getElementById('userAvatar').textContent = user.username.charAt(0).toUpperCase();
-                document.getElementById('userName').textContent = user.username;
-            }
-        }
-
-        function initializeApp() {
-            initializeMap();
-            connectWebSocket();
-            loadReports();
-            loadStats();
-            setInterval(loadStats, 30000);
-        }
-
         function initializeMap() {
             map = L.map('map').setView([10.9639, -74.7964], 12);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap'
             }).addTo(map);
+
+            // Evento de clic en el mapa para selección manual de ubicación
+            map.on('click', function(e) {
+                if (document.querySelector('.location-option[data-type="manual"].selected')) {
+                    document.getElementById('latitude').value = e.latlng.lat;
+                    document.getElementById('longitude').value = e.latlng.lng;
+                }
+            });
+        }
+
+        function connectWebSocket() {
+            const wsUrl = `ws://${SERVER_IP}/ws`;
+            socket = new WebSocket(wsUrl);
+            
+            socket.onopen = () => {
+                console.log("WebSocket conectado");
+                showNotification('Conexión establecida', 'Conectado al servidor', 'success');
+            };
+            
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            };
+            
+            socket.onclose = () => {
+                console.log("WebSocket desconectado");
+                setTimeout(connectWebSocket, 3000);
+            };
+            
+            socket.onerror = (error) => {
+                console.error("Error en WebSocket:", error);
+                showNotification('Error de conexión', 'Error en la conexión con el servidor', 'error');
+            };
+        }
+
+        async function loadReports() {
+            try {
+                const response = await fetch(`${API_BASE}/reports/`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al cargar los reportes');
+                }
+
+                const reports = await response.json();
+                reportCount = reports.length;
+                
+                // Limpiar reportes existentes
+                document.getElementById('reportList').innerHTML = '';
+                markers.forEach(marker => marker.remove());
+                markers.clear();
+
+                // Agregar los nuevos reportes
+                reports.forEach(report => {
+                    addReport(report);
+                });
+
+                // Actualizar contadores
+                updateReportCount();
+                
+                if (reportCount === 0) {
+                    showEmptyState();
+                }
+
+            } catch (error) {
+                console.error('Error loading reports:', error);
+                showNotification('Error', 'Error al cargar los reportes', 'error');
+            }
+        }
+
+        function handleWebSocketMessage(data) {
+            switch (data.type) {
+                case 'new_report':
+                    addReport(data.report, true);
+                    showNotification('Nuevo Reporte', 'Se ha recibido un nuevo reporte', 'info');
+                    break;
+                case 'delete_report':
+                    removeReport(data.report_id);
+                    showNotification('Reporte Eliminado', 'Un reporte ha sido eliminado', 'info');
+                    break;
+                case 'connected_users':
+                    updateConnectedUsers(data.count);
+                    break;
+                case 'error':
+                    showNotification('Error', data.message, 'error');
+                    break;
+            }
+        }
+
+        function updateReportCount() {
+            document.getElementById('totalReportsCount').textContent = reportCount;
+        }
+
+        function showEmptyState() {
+            document.getElementById('reportList').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📍</div>
+                    <h3 class="empty-title">No hay reportes</h3>
+                    <p class="empty-subtitle">Los reportes aparecerán aquí</p>
+                </div>
+            `;
+        }
+
+        function updateConnectedUsers(count) {
+            document.getElementById('connectedUsersCount').textContent = count;
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/stats/`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al cargar estadísticas');
+                }
+
+                const stats = await response.json();
+                
+                // Actualizar estadísticas en la UI
+                document.getElementById('totalReportsCount').textContent = stats.total_reports || 0;
+                document.getElementById('activeReportsCount').textContent = stats.active_reports || 0;
+                document.getElementById('responseTime').textContent = stats.avg_response_time?.toFixed(2) || '0.00';
+                
+                // Actualizar porcentajes de cambio
+                updateMetricChange('totalReportsChange', stats.total_reports_change);
+                updateMetricChange('activeReportsChange', stats.active_reports_change);
+                updateMetricChange('responseTimeChange', stats.response_time_change);
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        function updateMetricChange(elementId, value) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = value >= 0 ? `+${value}%` : `${value}%`;
+                element.className = `metric-change ${value >= 0 ? 'positive' : 'negative'}`;
+            }
         }
 
         function connectWebSocket() {
@@ -1685,19 +1831,26 @@
                 const report = reports.find(r => r.id === id);
                 
                 if (report) {
-                    modalId.innerHTML = `
-                        <div style="text-align: left; padding: 15px; background: rgba(0,0,0,0.7); border-radius: 8px; margin-top: 15px;">
-                            <h3 style="color: #4A90E2; margin-bottom: 10px;">Reporte ID: ${id}</h3>
-                            <p><strong>Ciudad:</strong> ${report.city || 'No especificada'}</p>
-                            <p><strong>Coordenadas:</strong> [${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)}]</p>
-                            <p><strong>Tipo de Incidente:</strong> ${report.incident_type || 'No especificado'}</p>
-                            <p><strong>Severidad:</strong> ${report.severity || 'No especificada'}</p>
-                            <p><strong>Estado:</strong> ${report.status || 'Pendiente'}</p>
-                            <p><strong>Fecha:</strong> ${new Date(report.timestamp).toLocaleString()}</p>
-                            <p><strong>Descripción:</strong></p>
-                            <p style="margin-left: 10px;">${report.description || 'Sin descripción'}</p>
-                        </div>
-                    `;
+                    // Crear el contenido del modal usando createElement
+                    const modalContent = document.createElement('div');
+                    modalContent.style.cssText = 'text-align: left; padding: 15px; background: rgba(0,0,0,0.7); border-radius: 8px; margin-top: 15px;';
+                    
+                    // Construir el contenido HTML de manera más segura
+                    modalContent.innerHTML = [
+                        '<h3 style="color: #4A90E2; margin-bottom: 10px;">Reporte ID: ' + id + '</h3>',
+                        '<p><strong>Ciudad:</strong> ' + (report.city || 'No especificada') + '</p>',
+                        '<p><strong>Coordenadas:</strong> [' + report.latitude.toFixed(4) + ', ' + report.longitude.toFixed(4) + ']</p>',
+                        '<p><strong>Tipo de Incidente:</strong> ' + (report.incident_type || 'No especificado') + '</p>',
+                        '<p><strong>Severidad:</strong> ' + (report.severity || 'No especificada') + '</p>',
+                        '<p><strong>Estado:</strong> ' + (report.status || 'Pendiente') + '</p>',
+                        '<p><strong>Fecha:</strong> ' + new Date(report.timestamp).toLocaleString() + '</p>',
+                        '<p><strong>Descripción:</strong></p>',
+                        '<p style="margin-left: 10px;">' + (report.description || 'Sin descripción') + '</p>'
+                    ].join('');
+
+                    // Limpiar y agregar el nuevo contenido
+                    modalId.innerHTML = '';
+                    modalId.appendChild(modalContent);
                 }
             } catch (error) {
                 console.error('Error al cargar detalles del reporte:', error);
