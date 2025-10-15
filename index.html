@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -573,202 +572,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Botón flotante para crear reporte */
-        .create-report-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #4A90E2, #50E3C2);
-            border: none;
-            border-radius: 50%;
-            color: white;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-            z-index: 1000;
-        }
-
-        .create-report-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-        }
-
-        /* Modal de creación de reporte */
-        .create-report-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1100;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(5px);
-        }
-
-        .create-report-content {
-            background: rgba(20, 20, 35, 0.95);
-            padding: 30px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        .create-report-content::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .create-report-content::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
-        }
-
-        .create-report-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .create-report-title {
-            font-size: 1.5em;
-            font-weight: 600;
-            color: #fff;
-        }
-
-        .create-report-form {
-            display: grid;
-            gap: 20px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .form-group label {
-            color: #e0e0e0;
-            font-weight: 500;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.05);
-            color: #fff;
-            font-size: 14px;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #4A90E2;
-        }
-
-        .image-preview {
-            width: 100%;
-            height: 200px;
-            border-radius: 8px;
-            border: 2px dashed rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #a0a0a0;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .image-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: none;
-        }
-
-        .image-preview.has-image img {
-            display: block;
-        }
-
-        .location-options {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .location-option {
-            padding: 15px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .location-option:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .location-option.selected {
-            border-color: #4A90E2;
-            background: rgba(74, 144, 226, 0.1);
-        }
-
-        .location-option i {
-            font-size: 24px;
-            margin-bottom: 8px;
-            display: block;
-            color: #4A90E2;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .form-actions button {
-            flex: 1;
-            padding: 12px;
-            border-radius: 8px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .submit-btn {
-            background: linear-gradient(135deg, #4A90E2, #50E3C2);
-            color: white;
-        }
-
-        .cancel-btn {
-            background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
-        }
-
-        .form-actions button:hover {
-            transform: translateY(-2px);
-        }
-
         /* Notificaciones */
         .notifications {
             position: fixed;
@@ -1049,148 +852,6 @@
         </div>
     </div>
 
-    <!-- Botón flotante para crear reporte -->
-    <button class="create-report-btn" onclick="openCreateReportModal()">+</button>
-
-    <!-- Modal de creación de reporte -->
-    <div id="createReportModal" class="create-report-modal">
-        <div class="create-report-content">
-            <div class="create-report-header">
-                <h2 class="create-report-title">Crear Nuevo Reporte</h2>
-                <button class="close" onclick="closeCreateReportModal()">&times;</button>
-            </div>
-            <form id="createReportForm" class="create-report-form" onsubmit="submitCreateReport(event)">
-                <div class="form-group">
-                    <label for="photo">Foto del Incidente</label>
-                    <input type="file" id="photo" name="photo" accept="image/*" onchange="handleImageUpload(event)" required>
-                    <div class="image-preview">
-                        <img src="" alt="Vista previa de la imagen">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Ubicación</label>
-                    <div class="location-options">
-                        <div class="location-option" data-type="current" onclick="selectLocation(this)">
-                            <i class="fas fa-location-arrow"></i>
-                            Usar ubicación actual
-                        </div>
-                        <div class="location-option" data-type="manual" onclick="selectLocation(this)">
-                            <i class="fas fa-map-marker-alt"></i>
-                            Seleccionar en el mapa
-                        </div>
-                    </div>
-                    <input type="hidden" id="latitude" name="latitude" required>
-                    <input type="hidden" id="longitude" name="longitude" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="city">Ciudad</label>
-                    <input type="text" id="city" name="city" placeholder="Ingresa la ciudad" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="incident_type">Tipo de Incidente</label>
-                    <select id="incident_type" name="incident_type" required>
-                        <option value="">Selecciona un tipo</option>
-                        <option value="Vandalismo">Vandalismo</option>
-                        <option value="Robo">Robo</option>
-                        <option value="Asalto">Asalto</option>
-                        <option value="Accidente">Accidente</option>
-                        <option value="Otro">Otro</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="severity">Severidad</label>
-                    <select id="severity" name="severity" required>
-                        <option value="">Selecciona la severidad</option>
-                        <option value="Baja">Baja</option>
-                        <option value="Media">Media</option>
-                        <option value="Alta">Alta</option>
-                        <option value="Crítica">Crítica</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="description">Descripción</label>
-                    <textarea id="description" name="description" rows="4" placeholder="Describe el incidente" required></textarea>
-                </div>
-
-                <div class="form-actions">
-                    <button type="button" class="cancel-btn" onclick="closeCreateReportModal()">Cancelar</button>
-                    <button type="submit" class="submit-btn">Crear Reporte</button>
-                </div>
-            </form>
-            <form id="createReportForm" class="create-report-form" onsubmit="submitReport(event)">
-                <div class="form-group">
-                    <label>Ubicación</label>
-                    <div class="location-options">
-                        <div class="location-option" onclick="selectLocationType('current')" id="currentLocationOption">
-                            <i>📍</i>
-                            <div>Ubicación Actual</div>
-                        </div>
-                        <div class="location-option" onclick="selectLocationType('manual')" id="manualLocationOption">
-                            <i>🎯</i>
-                            <div>Seleccionar en Mapa</div>
-                        </div>
-                    </div>
-                    <div id="locationFields" style="display: none;">
-                        <input type="number" id="latitude" name="latitude" placeholder="Latitud" step="any" required>
-                        <input type="number" id="longitude" name="longitude" placeholder="Longitud" step="any" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Ciudad</label>
-                    <input type="text" id="city" name="city" placeholder="Nombre de la ciudad">
-                </div>
-
-                <div class="form-group">
-                    <label>Tipo de Incidente</label>
-                    <select id="incidentType" name="incidentType" required>
-                        <option value="">Seleccionar tipo...</option>
-                        <option value="Vandalismo">Vandalismo</option>
-                        <option value="Robo">Robo</option>
-                        <option value="Accidente">Accidente</option>
-                        <option value="Violencia">Violencia</option>
-                        <option value="Otro">Otro</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Severidad</label>
-                    <select id="severity" name="severity" required>
-                        <option value="">Seleccionar severidad...</option>
-                        <option value="Baja">Baja</option>
-                        <option value="Media">Media</option>
-                        <option value="Alta">Alta</option>
-                        <option value="Critica">Crítica</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Foto del Incidente</label>
-                    <div class="image-preview" id="imagePreview" onclick="document.getElementById('photoInput').click()">
-                        <span id="uploadText">Click para subir foto</span>
-                        <img id="previewImage" src="" alt="Preview">
-                    </div>
-                    <input type="file" id="photoInput" accept="image/*" style="display: none;" onchange="previewPhoto(event)" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Descripción</label>
-                    <textarea id="description" name="description" rows="4" placeholder="Describe el incidente..."></textarea>
-                </div>
-
-                <div class="form-actions">
-                    <button type="button" class="cancel-btn" onclick="closeCreateReportModal()">Cancelar</button>
-                    <button type="submit" class="submit-btn">Crear Reporte</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- Notificaciones -->
     <div class="notifications" id="notifications"></div>
 
@@ -1217,34 +878,17 @@
 
         // Verificar autenticación al cargar
         window.addEventListener('DOMContentLoaded', async () => {
-            // Verificar token en localStorage
             authToken = localStorage.getItem('access_token');
             
             if (!authToken) {
                 window.location.href = '/';
                 return;
             }
-
+            
             try {
-                // Inicializar la aplicación
-                await initializeApp();
-            } catch (error) {
-                console.error('Error initializing app:', error);
-                showNotification('Error', 'Error al inicializar la aplicación', 'error');
-            }
-        });
-
-        function updateUserInfo(user) {
-            currentUser = user;
-            document.querySelector('.user-name').textContent = user.username;
-            document.querySelector('.user-avatar').textContent = user.username.charAt(0).toUpperCase();
-        }
-
-        async function initializeApp() {
-            // Obtener información del usuario
-            const response = await fetch(`${API_BASE}/users/me`, {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`
+                const response = await fetch(`${API_BASE}/users/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
                     }
                 });
                 
@@ -1264,155 +908,26 @@
             }
         });
 
+        function updateUserInfo(user) {
+            if (user) {
+                document.getElementById('userAvatar').textContent = user.username.charAt(0).toUpperCase();
+                document.getElementById('userName').textContent = user.username;
+            }
+        }
+
+        function initializeApp() {
+            initializeMap();
+            connectWebSocket();
+            loadReports();
+            loadStats();
+            setInterval(loadStats, 30000);
+        }
+
         function initializeMap() {
             map = L.map('map').setView([10.9639, -74.7964], 12);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap'
             }).addTo(map);
-
-            // Evento de clic en el mapa para selección manual de ubicación
-            map.on('click', function(e) {
-                if (document.querySelector('.location-option[data-type="manual"].selected')) {
-                    document.getElementById('latitude').value = e.latlng.lat;
-                    document.getElementById('longitude').value = e.latlng.lng;
-                }
-            });
-        }
-
-        function connectWebSocket() {
-            const wsUrl = `ws://${SERVER_IP}/ws`;
-            socket = new WebSocket(wsUrl);
-            
-            socket.onopen = () => {
-                console.log("WebSocket conectado");
-                showNotification('Conexión establecida', 'Conectado al servidor', 'success');
-            };
-            
-            socket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                handleWebSocketMessage(data);
-            };
-            
-            socket.onclose = () => {
-                console.log("WebSocket desconectado");
-                setTimeout(connectWebSocket, 3000);
-            };
-            
-            socket.onerror = (error) => {
-                console.error("Error en WebSocket:", error);
-                showNotification('Error de conexión', 'Error en la conexión con el servidor', 'error');
-            };
-        }
-
-        async function loadReports() {
-            try {
-                const response = await fetch(`${API_BASE}/reports/`, {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Error al cargar los reportes');
-                }
-
-                const reports = await response.json();
-                reportCount = reports.length;
-                
-                // Limpiar reportes existentes
-                document.getElementById('reportList').innerHTML = '';
-                markers.forEach(marker => marker.remove());
-                markers.clear();
-
-                // Agregar los nuevos reportes
-                reports.forEach(report => {
-                    addReport(report);
-                });
-
-                // Actualizar contadores
-                updateReportCount();
-                
-                if (reportCount === 0) {
-                    showEmptyState();
-                }
-
-            } catch (error) {
-                console.error('Error loading reports:', error);
-                showNotification('Error', 'Error al cargar los reportes', 'error');
-            }
-        }
-
-        function handleWebSocketMessage(data) {
-            switch (data.type) {
-                case 'new_report':
-                    addReport(data.report, true);
-                    showNotification('Nuevo Reporte', 'Se ha recibido un nuevo reporte', 'info');
-                    break;
-                case 'delete_report':
-                    removeReport(data.report_id);
-                    showNotification('Reporte Eliminado', 'Un reporte ha sido eliminado', 'info');
-                    break;
-                case 'connected_users':
-                    updateConnectedUsers(data.count);
-                    break;
-                case 'error':
-                    showNotification('Error', data.message, 'error');
-                    break;
-            }
-        }
-
-        function updateReportCount() {
-            document.getElementById('totalReportsCount').textContent = reportCount;
-        }
-
-        function showEmptyState() {
-            document.getElementById('reportList').innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">📍</div>
-                    <h3 class="empty-title">No hay reportes</h3>
-                    <p class="empty-subtitle">Los reportes aparecerán aquí</p>
-                </div>
-            `;
-        }
-
-        function updateConnectedUsers(count) {
-            document.getElementById('connectedUsersCount').textContent = count;
-        }
-
-        async function loadStats() {
-            try {
-                const response = await fetch(`${API_BASE}/stats/`, {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Error al cargar estadísticas');
-                }
-
-                const stats = await response.json();
-                
-                // Actualizar estadísticas en la UI
-                document.getElementById('totalReportsCount').textContent = stats.total_reports || 0;
-                document.getElementById('activeReportsCount').textContent = stats.active_reports || 0;
-                document.getElementById('responseTime').textContent = stats.avg_response_time?.toFixed(2) || '0.00';
-                
-                // Actualizar porcentajes de cambio
-                updateMetricChange('totalReportsChange', stats.total_reports_change);
-                updateMetricChange('activeReportsChange', stats.active_reports_change);
-                updateMetricChange('responseTimeChange', stats.response_time_change);
-            } catch (error) {
-                console.error('Error loading stats:', error);
-            }
-        }
-
-        function updateMetricChange(elementId, value) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                element.textContent = value >= 0 ? `+${value}%` : `${value}%`;
-                element.className = `metric-change ${value >= 0 ? 'positive' : 'negative'}`;
-            }
         }
 
         function connectWebSocket() {
@@ -1648,166 +1163,6 @@
             if (reportCount === 0) {
                 document.getElementById('reportList').innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-icon">📍</div>
-                        <h3 class="empty-title">No hay reportes</h3>
-                        <p class="empty-subtitle">Los reportes aparecerán aquí</p>
-                    </div>
-                `;
-            }
-        }
-
-        // Funciones para el modal de creación de reportes
-        function openCreateReportModal() {
-            const modal = document.getElementById('createReportModal');
-            modal.style.display = 'flex';
-            
-            // Restablecer el formulario
-            document.getElementById('createReportForm').reset();
-            document.querySelector('.image-preview').classList.remove('has-image');
-            document.querySelector('.image-preview img').src = '';
-            
-            // Restablecer las opciones de ubicación
-            document.querySelectorAll('.location-option').forEach(option => {
-                option.classList.remove('selected');
-            });
-        }
-
-        function closeCreateReportModal() {
-            const modal = document.getElementById('createReportModal');
-            modal.style.display = 'none';
-        }
-
-        function handleImageUpload(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const preview = document.querySelector('.image-preview');
-                    const previewImg = preview.querySelector('img');
-                    previewImg.src = e.target.result;
-                    preview.classList.add('has-image');
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function selectLocation(option) {
-            document.querySelectorAll('.location-option').forEach(opt => {
-                opt.classList.remove('selected');
-            });
-            option.classList.add('selected');
-
-            if (option.dataset.type === 'current') {
-                getCurrentLocation();
-            } else if (option.dataset.type === 'manual') {
-                // Permitir al usuario hacer clic en el mapa
-                enableMapSelection();
-            }
-        }
-
-        function getCurrentLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        document.getElementById('latitude').value = position.coords.latitude;
-                        document.getElementById('longitude').value = position.coords.longitude;
-                        map.setView([position.coords.latitude, position.coords.longitude], 15);
-                    },
-                    (error) => {
-                        showNotification('Error', 'No se pudo obtener la ubicación actual. Por favor, selecciona manualmente.', 'error');
-                    }
-                );
-            }
-        }
-
-        let mapClickListener = null;
-
-        function enableMapSelection() {
-            if (mapClickListener) {
-                map.off('click', mapClickListener);
-            }
-            
-            mapClickListener = (e) => {
-                document.getElementById('latitude').value = e.latlng.lat;
-                document.getElementById('longitude').value = e.latlng.lng;
-                map.setView(e.latlng, 15);
-            };
-            
-            map.on('click', mapClickListener);
-            showNotification('Info', 'Haz clic en el mapa para seleccionar la ubicación', 'info');
-        }
-
-        async function submitCreateReport(event) {
-            event.preventDefault();
-            
-            const form = event.target;
-            const formData = new FormData(form);
-            
-            // Validar campos requeridos
-            const latitude = formData.get('latitude');
-            const longitude = formData.get('longitude');
-            const photo = document.querySelector('.image-preview img').src;
-            
-            if (!latitude || !longitude) {
-                showNotification('Error', 'Por favor, selecciona una ubicación', 'error');
-                return;
-            }
-            
-            if (!photo) {
-                showNotification('Error', 'Por favor, selecciona una imagen', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE}/reports/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    },
-                    body: JSON.stringify({
-                        latitude: parseFloat(latitude),
-                        longitude: parseFloat(longitude),
-                        timestamp: new Date().toISOString(),
-                        photo_base64: photo.split(',')[1],
-                        city: formData.get('city'),
-                        incident_type: formData.get('incident_type'),
-                        severity: formData.get('severity'),
-                        description: formData.get('description')
-                    })
-                });
-
-                if (response.ok) {
-                    const newReport = await response.json();
-                    addReport(newReport, true);
-                    closeCreateReportModal();
-                    showNotification('Éxito', 'Reporte creado correctamente', 'success');
-                } else {
-                    throw new Error('Error al crear el reporte');
-                }
-            } catch (error) {
-                showNotification('Error', error.message, 'error');
-            }
-        }
-
-        // Función para mostrar notificaciones
-        function showNotification(title, message, type = 'info') {
-            const notifications = document.getElementById('notifications');
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.innerHTML = `
-                <div class="notification-content">
-                    <div class="notification-title">${title}</div>
-                    <div class="notification-message">${message}</div>
-                </div>
-            `;
-            notifications.appendChild(notification);
-            
-            // Remover la notificación después de 5 segundos
-            setTimeout(() => {
-                notification.remove();
-            }, 5000);
-        }
                         <div class="empty-icon">📭</div>
                         <div class="empty-title">No hay reportes disponibles</div>
                         <div class="empty-subtitle">Los reportes aparecerán aquí</div>
@@ -1831,26 +1186,19 @@
                 const report = reports.find(r => r.id === id);
                 
                 if (report) {
-                    // Crear el contenido del modal usando createElement
-                    const modalContent = document.createElement('div');
-                    modalContent.style.cssText = 'text-align: left; padding: 15px; background: rgba(0,0,0,0.7); border-radius: 8px; margin-top: 15px;';
-                    
-                    // Construir el contenido HTML de manera más segura
-                    modalContent.innerHTML = [
-                        '<h3 style="color: #4A90E2; margin-bottom: 10px;">Reporte ID: ' + id + '</h3>',
-                        '<p><strong>Ciudad:</strong> ' + (report.city || 'No especificada') + '</p>',
-                        '<p><strong>Coordenadas:</strong> [' + report.latitude.toFixed(4) + ', ' + report.longitude.toFixed(4) + ']</p>',
-                        '<p><strong>Tipo de Incidente:</strong> ' + (report.incident_type || 'No especificado') + '</p>',
-                        '<p><strong>Severidad:</strong> ' + (report.severity || 'No especificada') + '</p>',
-                        '<p><strong>Estado:</strong> ' + (report.status || 'Pendiente') + '</p>',
-                        '<p><strong>Fecha:</strong> ' + new Date(report.timestamp).toLocaleString() + '</p>',
-                        '<p><strong>Descripción:</strong></p>',
-                        '<p style="margin-left: 10px;">' + (report.description || 'Sin descripción') + '</p>'
-                    ].join('');
-
-                    // Limpiar y agregar el nuevo contenido
-                    modalId.innerHTML = '';
-                    modalId.appendChild(modalContent);
+                    modalId.innerHTML = `
+                        <div style="text-align: left; padding: 15px; background: rgba(0,0,0,0.7); border-radius: 8px; margin-top: 15px;">
+                            <h3 style="color: #4A90E2; margin-bottom: 10px;">Reporte ID: ${id}</h3>
+                            <p><strong>Ciudad:</strong> ${report.city || 'No especificada'}</p>
+                            <p><strong>Coordenadas:</strong> [${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)}]</p>
+                            <p><strong>Tipo de Incidente:</strong> ${report.incident_type || 'No especificado'}</p>
+                            <p><strong>Severidad:</strong> ${report.severity || 'No especificada'}</p>
+                            <p><strong>Estado:</strong> ${report.status || 'Pendiente'}</p>
+                            <p><strong>Fecha:</strong> ${new Date(report.timestamp).toLocaleString()}</p>
+                            <p><strong>Descripción:</strong></p>
+                            <p style="margin-left: 10px;">${report.description || 'Sin descripción'}</p>
+                        </div>
+                    `;
                 }
             } catch (error) {
                 console.error('Error al cargar detalles del reporte:', error);
