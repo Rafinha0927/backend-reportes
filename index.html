@@ -198,10 +198,9 @@
         /* Contenedor principal */
         .main-container {
             display: grid;
-            grid-template-columns: 1fr 350px;
+            grid-template-columns: 0 1fr 350px;
             gap: 30px;
             transition: all 0.3s ease-in-out;
-            position: relative;
         }
 
         .main-container.show-panel {
@@ -217,18 +216,15 @@
             height: 600px;
             overflow-y: auto;
             transition: all 0.3s ease-in-out;
+            width: 0;
             opacity: 0;
             visibility: hidden;
-            position: absolute;
-            left: -300px;
-            width: 300px;
-            z-index: 1;
         }
 
         .marker-info-panel.visible {
+            width: 300px;
             opacity: 1;
             visibility: visible;
-            left: 0;
         }
 
         .marker-info-panel .panel-header {
@@ -815,7 +811,7 @@
         <!-- Contenedor principal -->
         <div class="main-container">
             <!-- Panel de información del marcador -->
-            <div class="marker-info-panel" id="markerInfoPanel" style="display: none;">
+            <div class="marker-info-panel" id="markerInfoPanel">
                 <div class="panel-header">
                     <div class="panel-title">Detalles del Reporte</div>
                     <button class="close-panel-btn" onclick="closeMarkerInfo()">&times;</button>
@@ -1050,15 +1046,14 @@
                 </div>
             `;
             
-            // Primero agregamos la clase al contenedor principal
-            document.querySelector('.main-container').classList.add('show-panel');
+            const mainContainer = document.querySelector('.main-container');
+            mainContainer.classList.add('show-panel');
+            panel.classList.add('visible');
             
-            // Pequeña espera para que comience la transición del grid
+            // Pequeña espera para que el mapa se actualice después de la transición
             setTimeout(() => {
-                panel.classList.add('visible');
-                // Forzar un reflow del mapa para que se actualice correctamente
                 map.invalidateSize();
-            }, 50);
+            }, 300);
         }
 
         function closeMarkerInfo() {
@@ -1066,10 +1061,10 @@
             const mainContainer = document.querySelector('.main-container');
             
             panel.classList.remove('visible');
+            mainContainer.classList.remove('show-panel');
             
-            // Esperar a que termine la transición del panel antes de ajustar el grid
+            // Esperar a que termine la transición para actualizar el mapa
             setTimeout(() => {
-                mainContainer.classList.remove('show-panel');
                 map.invalidateSize();
             }, 300);
         }
