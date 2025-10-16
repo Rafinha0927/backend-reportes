@@ -572,6 +572,202 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Botón flotante para crear reporte */
+        .create-report-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4A90E2, #50E3C2);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .create-report-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Modal de creación de reporte */
+        .create-report-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1100;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .create-report-content {
+            background: rgba(20, 20, 35, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .create-report-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .create-report-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .create-report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .create-report-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .create-report-form {
+            display: grid;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            color: #e0e0e0;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4A90E2;
+        }
+
+        .image-preview {
+            width: 100%;
+            height: 200px;
+            border-radius: 8px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #a0a0a0;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .image-preview.has-image img {
+            display: block;
+        }
+
+        .location-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .location-option {
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .location-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .location-option.selected {
+            border-color: #4A90E2;
+            background: rgba(74, 144, 226, 0.1);
+        }
+
+        .location-option i {
+            font-size: 24px;
+            margin-bottom: 8px;
+            display: block;
+            color: #4A90E2;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .form-actions button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #4A90E2, #50E3C2);
+            color: white;
+        }
+
+        .cancel-btn {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .form-actions button:hover {
+            transform: translateY(-2px);
+        }
+
         /* Notificaciones */
         .notifications {
             position: fixed;
@@ -849,6 +1045,85 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Botón flotante para crear reporte -->
+    <button class="create-report-btn" onclick="openCreateReportModal()">+</button>
+
+    <!-- Modal de creación de reporte -->
+    <div id="createReportModal" class="create-report-modal">
+        <div class="create-report-content">
+            <div class="create-report-header">
+                <div class="create-report-title">Crear Nuevo Reporte</div>
+                <button class="close-panel-btn" onclick="closeCreateReportModal()">&times;</button>
+            </div>
+            <form id="createReportForm" class="create-report-form" onsubmit="submitReport(event)">
+                <div class="form-group">
+                    <label>Ubicación</label>
+                    <div class="location-options">
+                        <div class="location-option" onclick="selectLocationType('current')" id="currentLocationOption">
+                            <i>📍</i>
+                            <div>Ubicación Actual</div>
+                        </div>
+                        <div class="location-option" onclick="selectLocationType('manual')" id="manualLocationOption">
+                            <i>🎯</i>
+                            <div>Seleccionar en Mapa</div>
+                        </div>
+                    </div>
+                    <div id="locationFields" style="display: none;">
+                        <input type="number" id="latitude" name="latitude" placeholder="Latitud" step="any" required>
+                        <input type="number" id="longitude" name="longitude" placeholder="Longitud" step="any" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Ciudad</label>
+                    <input type="text" id="city" name="city" placeholder="Nombre de la ciudad">
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo de Incidente</label>
+                    <select id="incidentType" name="incidentType" required>
+                        <option value="">Seleccionar tipo...</option>
+                        <option value="Vandalismo">Vandalismo</option>
+                        <option value="Robo">Robo</option>
+                        <option value="Accidente">Accidente</option>
+                        <option value="Violencia">Violencia</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Severidad</label>
+                    <select id="severity" name="severity" required>
+                        <option value="">Seleccionar severidad...</option>
+                        <option value="Baja">Baja</option>
+                        <option value="Media">Media</option>
+                        <option value="Alta">Alta</option>
+                        <option value="Critica">Crítica</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Foto del Incidente</label>
+                    <div class="image-preview" id="imagePreview" onclick="document.getElementById('photoInput').click()">
+                        <span id="uploadText">Click para subir foto</span>
+                        <img id="previewImage" src="" alt="Preview">
+                    </div>
+                    <input type="file" id="photoInput" accept="image/*" style="display: none;" onchange="previewPhoto(event)" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea id="description" name="description" rows="4" placeholder="Describe el incidente..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="cancel-btn" onclick="closeCreateReportModal()">Cancelar</button>
+                    <button type="submit" class="submit-btn">Crear Reporte</button>
+                </div>
+            </form>
         </div>
     </div>
 
